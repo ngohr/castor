@@ -2,13 +2,13 @@
 
 /*
  *
- * Xslt class Operator
+ * castor class Operator
  *
  * - class Operator is a data model for loaded instances of data, typically data will load from mysql-db-tables.
  * - Operators are named, they couldt contain a set of named data. Data is stored in an associative array $this->operator [$this->idx]
- * - Operators and all typicall xsltDocument modules must implement a method public function load($instance = false)
+ * - Operators and all typicall castor modules must implement a method public function load($instance = false)
  *   At all, an Operator child Object, is an abstraction of document page and action elements for model products.
- *   Only with the known constants of a loaded page, also pagenames and Elements given for $instance = ChildOfApplication, are module concept for xsltDocument satisfying.
+ *   Only with the known constants of a loaded page, also pagenames and Elements given for $instance = ChildOfApplication, are module concept for castor satisfying.
  * - Use class Operator to getElements for Page and Objects and use them in an initial load of data, a production env. are db login data get From Operator(instance) or connect to a db...
  * - After adding of extern data you couldt use data with a concurrent name or a new instance of the module to store more data.
  * - Use $this->choose to set a pointer for the named data, use "check" methods to valid data against given data from constants, page elements or extern data.#

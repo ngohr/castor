@@ -5,7 +5,7 @@
  * Xslt Action Class
  *
  * - Class to open Methods of an instance of child Application Objects.
- * - Acts as factory for xsltMVC websites and bypass Controllers to set individual properties for childs of Application Objects.
+ * - Acts as factory for castor websites and bypass Controllers to set individual properties for childs of Application Objects.
  * - Data Models, will returned and performed in associatet objects.
  * - A format for Data is defined by setRendering and setReturnType.
  * - Page and Action objects are named. An Action Object relates to a Page and is named as $this->name.

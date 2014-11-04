@@ -5,7 +5,7 @@
  * Application Class
  *
  * - Defines methods to handle Elements, constants and localNodes defined by a page loader.
- * - Elements arent restrictively designed for xsltDocument element collection class Application in all is an independet data container.
+ * - Elements arent restrictively designed for castor element collections. Class Application in all is an independet data container.
  * 
  * - Controller Classes shouldt inherit class Application
  *

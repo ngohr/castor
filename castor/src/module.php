@@ -1,10 +1,10 @@
 <?php
 
 /*
- * Xslt module Class
+ * castors module Class
  * 
  * - class module provides a static singleton pattern to save constructed Modules, defined in configuration files.
- * - Typical xsltDocument modules provides a relation to a given connection or a data instance.
+ * - Typical castor modules provides a relation to a given connection or a data instance.
  * - Modules are named from config constants, but they typically provide a key to get multiple data loaded from the instance.
  *   Also, modules will be loaded by getting a named object and abstract a given collection of named data models.
  *   
