@@ -5,7 +5,7 @@
  * Xslt Page Class
  *
  * - Construct entities for Action objects.
- * - Acts as factory for xsltDocument Main actions and bypass methods to set individual properties.
+ * - Acts as factory for castor Main actions and bypass methods to set individual properties.
  * - Page and Action objects are named. Merged names can call Action->run directly.
  * 
  * A file, a classname and a method must be set before named Action directives couldt load.

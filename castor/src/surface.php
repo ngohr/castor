@@ -1,7 +1,7 @@
 <?php
 
 /*
- * class Surface, a xsltDocument Module abstraction with a method load, called from module::get()
+ * class Surface, a castor Module abstraction with a method load, called from module::get()
  * 
  * - A Surface is a primitive data model, that copy elements, constants and pagenames from $instance to local data procced by $this->init() in final constructs.
  * - A Surface instead of an Operator, do not valid external data.
