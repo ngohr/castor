@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config>
+<config>
+	<document>
+		<path>controller</path>
+		<root action="welcome">home</root>
+		<file>indexController.php</file>
+	</document>
+	<sitemap>
+		<page name="home" index="index" return="DomDocument">
+			<title>Castor - Homepage</title>
+
+			<class>indexController</class>
+			<method>indexAction</method>
+
+			<action name="index" title="Homepage">
+				<style rendering="client">/styles/xss/frontend/home/index.xsl</style>
+			</action>
+		</page>
+	</sitemap>
+</config>
