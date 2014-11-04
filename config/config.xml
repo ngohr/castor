@@ -3,7 +3,7 @@
 <config>
 	<document>
 		<path>controller</path>
-		<root action="welcome">home</root>
+		<root action="index">home</root>
 		<file>indexController.php</file>
 	</document>
 	<sitemap>
