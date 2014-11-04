@@ -2,7 +2,7 @@
 
 /*
  *
- * xsltDocument Main Class for PHP-X Projects
+ * xsltDocument Main Class for castor Projects
  *
  * - Create a Page to load Controller Classes.
  * - An XML-Config, with a default or individual page/action construct couldt loaded but is not obsolete.
@@ -41,7 +41,7 @@
  * #014 Load local Modules also intim only for one simple action, but estimate the benefits for speed and memory, relates todo #009
  * 		Read elements.php to find a reason for system Plugins
  * #016 Test Elements and expandNode for run() calls and createPage Rules.
- * #017 A simple Module for user/session management and database connection shouldt rule the primitive use of PHP-X 
+ * #017 A simple Module for user/session management and database connection shouldt rule the primitive use of castor 
  * #019 Take a finally decision for the use of saveHTML or saveXML
  *
  * @version
