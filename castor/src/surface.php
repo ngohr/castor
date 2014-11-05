@@ -12,7 +12,7 @@
  * @todos
  * 
  * #001 Data Models shouldt be a difently clean collection of abstract classes and it must be an experimental features for years of testing, relates module.php #001
- * 
+ * a
  * @version
  *
  * 0.4 / 27.09.2013
@@ -26,7 +26,8 @@ abstract class Surface extends Application {
 	public $error = false;
 
 	abstract function init();
-	abstract function connect(&$connection);
+	abstract function connect();
+	abstract function cloneConnection(&$connection);
 	abstract function close();
 	abstract function reset();
 

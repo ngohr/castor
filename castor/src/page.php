@@ -303,25 +303,22 @@ class Page {
 		}
 	}
 
-	public function setLocals($action, &$objAction) {
-		if($this->elements) {
-			foreach($this->elements as $name => $value) {
-				$objAction->setElement($name, $value);
-			}
-		}
-		
-		if(count($this->locals[$action]) > 0) {
-			foreach($this->locals[$action] as $name => $value) {
-				$objAction->setElement($name, $value);
-			}
-		}
-	}
-
 	// Run all actions in $this->arrAction, setElements, setPagename and return Array($objAction->run())
 	public function load() {
 		foreach($this->arrAction as $action => $objAction) {
 			// Add Page Vars to $objAction
-			$this->setLocals($action, $objAction);
+			if($this->elements) {
+				foreach($this->elements as $name => $value) {
+					$objAction->setElement($name, $value);
+				}
+			}
+
+			if(count($this->locals[$action]) > 0) {
+				foreach($this->locals[$action] as $name => $value) {
+					$objAction->setElement($name, $value);
+				}
+			}
+			
 
 			$objAction->setPagename($this->getName());
 

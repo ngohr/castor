@@ -2,14 +2,14 @@
 
 /*
  *
- * xsltDocument Main Class for castor Projects
+ * xsltDocument Main Class for Castor Projects
  *
  * - Create a Page to load Controller Classes.
  * - An XML-Config, with a default or individual page/action construct couldt loaded but is not mandatory.
  * - $this->arrPage contains Page Objects and gaves access to Local functions from Action Objects.
  * - $this->document contains main data like a basepath and a rootpage.
  * - $this->elements contains main constants from configuration and setElement() calls.
- * - $this->expand contains an array with the content of <expand> nodes in configurations, expand elements are compatible with "class elements" methods
+ * - $this->expand contains an array with the content of <expand> nodes in configurations, expand elements are compatible with $this->createDomElement(), #relates todo #015 
  * - Elements, will be given to action method, if them was set for document, page or action.
  * - Elements for Actions are individual and not available in other page actions.
  * 
@@ -32,7 +32,6 @@
  *
  *		- Surface Interfaces was developed at 25.07.2013
  *		- Operator Childs was developed at 27.07.2013
- *		- Adapter Pattern was developed at ~May 2014
  *
  * #010 Maybe, the inclusion of "overwrite" Tag attributes, is a good idea for later versions. Detect #010 comments for more inspirations and ideas. 
  * #011 Maybe, use Document Objects. For Document Elements and Nodes couldt be a place in its own object "Document", for main constants and relations.
@@ -41,7 +40,7 @@
  * #014 Load local Modules also intim only for one simple action, but estimate the benefits for speed and memory, relates todo #009
  * 		Read elements.php to find a reason for system Plugins
  * #016 Test Elements and expandNode for run() calls and createPage Rules.
- * #017 A simple Module for user/session management and database connection shouldt rule the primitive use of castor 
+ * #017 A simple Module for user/session management and database connection shouldt rule the primitive use of Castor 
  * #019 Take a finally decision for the use of saveHTML or saveXML
  *
  * @version
@@ -84,13 +83,20 @@ class xsltDocument {
 	private $validConfig = array();
 	
 	private $error = false;
+	private $surface = array();
+	private $operator = array();
+	private $adapter = array();
 
 	public function __construct() {
+
+	}
+
+	public function load() {
 		// Create DomDocument Object
 		$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
 		$this->domDocumentObj->preserveWhiteSpace = true;
 		$this->domDocumentObj->formatOutput = true;
-
+		
 		// Create Document Rootnode <root>
 		// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
 		$this->root = $this->domDocumentObj->createElement('root');
@@ -149,10 +155,6 @@ class xsltDocument {
 	// Ads a file for a page, files will required for all actions in Obj Page
 	public function addFile($page, $file) {
 		return $this->arrPage[$page]->addFile($file);
-	}
-
-	public function getSitemap() {
-		return $this->arrPage;
 	}
 
 	// Load default config: Returns true if config $file was loaded correctly, returns false on nonconforming use, throws Exception on errors
@@ -239,6 +241,7 @@ class xsltDocument {
 			unset($arr);
 		}
 
+	
 		// Load Surface´s for document Elements
 		$nodes = $nodeDocument->getElementsByTagName('surface');
 		if($nodes) {
@@ -250,24 +253,30 @@ class xsltDocument {
 					if(!$surfaceName)
 						throw new Exception('Missing name for Surface!');
 
-					$files = $surfacenode->getElementsByTagName('file');
-					if(!$files)
+					$this->surface[$surfaceName] = array();
+						
+					$filesNode = $surfacenode->getElementsByTagName('file');
+					if(!$filesNode)
 						throw new Exception('Missing file for Surface '.$name.'!');
 
-					if($files->item(0)) {
-						if(!file_exists($files->item(0)->nodeValue)) {
-							throw new Exception('File '.$files->item(0)->nodeValue.' not exists!');
+					if($filesNode->item(0)) {
+						if(!file_exists($filesNode->item(0)->nodeValue)) {
+							throw new Exception('File '.$filesNode->item(0)->nodeValue.' not exists!');
 						}
-						$file = $files->item(0)->nodeValue;
+						$file = $filesNode->item(0)->nodeValue;
+						
+						$this->surface[$surfaceName]['file'] = $file;
 
 						$classNode = $surfacenode->getElementsByTagName('class');
 						$classname = $classNode->item(0)->nodeValue;
+						
+						$this->surface[$surfaceName]['class'] = $classname;
 
-						module::add($surfaceName, $classname, $file, $objSurface);
+						// module::add($surfaceName, $classname, $file, $objSurface);
 					}
 
 					// Load Arrays for surface nodes...
-					$elements = array();
+					$this->surface[$surfaceName]['elements'] = array();
 					$arrNodes = $surfacenode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
@@ -283,7 +292,7 @@ class xsltDocument {
 
 								$arr[$name] = $value;
 							}
-							$elements[$arrname] = $arr;
+							$this->surface[$surfaceName]['elements'][$arrname] = $arr;
 							
 							unset($arr);
 						}
@@ -291,9 +300,8 @@ class xsltDocument {
 					
 					}
 
-					$objSurface->setElements($elements);
-
-					unset($elements);
+					// $objSurface->setElements($elements);
+					// unset($elements);
 				}
 			}
 		}
@@ -305,28 +313,32 @@ class xsltDocument {
 				$operatornode = $nodes->item($i);
 
 				if($operatornode->parentNode->nodeName == 'document') {
-					$name = $operatornode->getAttribute('name');
-					if(!$name)
+					$operatorName = $operatornode->getAttribute('name');
+					if(!$operatorName)
 						throw new Exception('Missing name for Operator Module!');
+					
+					$this->operator[$operatorName] = array();
 
-					$files = $operatornode->getElementsByTagName('file');
-					if(!$files)
-						throw new Exception('Missing file for Operator Module '.$name.'!');
+					$filesNode = $operatornode->getElementsByTagName('file');
+					if(!$filesNode)
+						throw new Exception('Missing file for Operator Module '.$operatorName.'!');
 
-					if($files->item(0)) {
-						if(!file_exists($files->item(0)->nodeValue)) {
-							throw new Exception('File '.$files->item(0)->nodeValue.' not exists!');
+					if($filesNode->item(0)) {
+						if(!file_exists($filesNode->item(0)->nodeValue)) {
+							throw new Exception('File '.$filesNode->item(0)->nodeValue.' not exists!');
 						}
-						$file = $files->item(0)->nodeValue;
+						$file = $filesNode->item(0)->nodeValue;
+
+						$this->operator[$operatorName]['file'] = $file;
 
 						$classNode = $operatornode->getElementsByTagName('class');
-						$classname = $classNode->item(0)->nodeValue;
+						$this->operator[$operatorName]['class'] = $classNode->item(0)->nodeValue;
 
-						module::add($name, $classname, $file, $objOperator);
+						// module::add($name, $classname, $file, $objOperator);
 					}
 
 					// Load Arrays for operator nodes...
-					$elements = array();
+					$this->operator[$operatorName]['elements'] = array();
 					$arrNodes = $operatornode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
@@ -343,15 +355,15 @@ class xsltDocument {
 					
 								$arr[$name] = $value;
 							}
-							$elements[$arrname] = $arr;
+							$this->operator[$operatorName]['elements'][$arrname] = $arr;
 							
 							unset($arr);
 						}
 					}
 
-					$objOperator->setElements($elements);
+					// $objOperator->setElements($elements);
 					
-					unset($elements);
+					// unset($elements);
 				}
 			}
 		}
@@ -360,32 +372,37 @@ class xsltDocument {
 		$nodes = $nodeDocument->getElementsByTagName('adapter');
 		if($nodes) {
 			for($i = 0; $i < $nodes->length; $i++) {
-				$operatornode = $nodes->item($i);
+				$adapternode = $nodes->item($i);
 		
-				if($operatornode->parentNode->nodeName == 'document') {
-					$name = $operatornode->getAttribute('name');
-					if(!$name)
+				if($adapternode->parentNode->nodeName == 'document') {
+					$adapterName = $adapternode->getAttribute('name');
+					if(!$adapterName)
 						throw new Exception('Missing name for Adapter Module!');
+					
+					$this->adapter[$adapterName] = array();
 		
-					$files = $operatornode->getElementsByTagName('file');
-					if(!$files)
-						throw new Exception('Missing file for Adapter Module '.$name.'!');
+					$filesNode = $adapternode->getElementsByTagName('file');
+					if(!$filesNode)
+						throw new Exception('Missing file for Adapter Module '.$adapterName.'!');
 		
-					if($files->item(0)) {
-						if(!file_exists($files->item(0)->nodeValue)) {
+					if($filesNode->item(0)) {
+						if(!file_exists($filesNode->item(0)->nodeValue)) {
 							throw new Exception('File '.$files->item(0)->nodeValue.' not exists!');
 						}
-						$file = $files->item(0)->nodeValue;
+						$file = $filesNode->item(0)->nodeValue;
+						
+						$this->adapter[$adapterName]['file'] = $file; 
 		
-						$classNode = $operatornode->getElementsByTagName('class');
+						$classNode = $adapternode->getElementsByTagName('class');
 						$classname = $classNode->item(0)->nodeValue;
+						$this->adapter[$adapterName]['class'] = $classname;
 		
-						module::add($name, $classname, $file, $objAdapter);
+						// module::add($name, $classname, $file, $objAdapter);
 					}
 		
 					// Load Arrays for operator nodes...
-					$elements = array();
-					$arrNodes = $operatornode->getElementsByTagName('arr');
+					$this->adapter[$adapterName]['elements'] = array();
+					$arrNodes = $adapternode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
 		
@@ -401,15 +418,11 @@ class xsltDocument {
 									
 								$arr[$name] = $value;
 							}
-							$elements[$arrname] = $arr;
+							$this->adapter[$adapterName]['elements'][$arrname] = $arr;
 								
 							unset($arr);
 						}
 					}
-		
-					$objAdapter->setElements($elements);
-						
-					unset($elements);
 				}
 			}
 		}
@@ -452,6 +465,8 @@ class xsltDocument {
 
 						$objPage->addFile($file);
 					}
+
+					$e++;
 				}
 
 				// If configured, ever set root elements for a page
@@ -639,7 +654,7 @@ class xsltDocument {
 									$arr[$name] = $value;
 								}
 
-								$objAction->setElement($arrname, $arr);
+								$objAction->setLocal($arrname, $arr);
 
 								unset($arr);
 							}
@@ -761,7 +776,7 @@ class xsltDocument {
 					throw new Exception('Page "'.$page.'" is not defined!');
 				}
 			} else {
-				throw new Exception('Mandatory Element config/root is not defined!');
+				throw new Exception('mandatory Element config/root is not defined!');
 			}
 		}
 
@@ -823,6 +838,17 @@ class xsltDocument {
 	// Return Type Array, json, DomDocument and text/html is supported. Renderingtypes xml, server and client is valid.
 	public function loadPage($page = false, $action = false) {
 		$objPage = false;
+
+		// Create DomDocument Object
+		if(!$this->domDocumentObj) {
+			$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+			$this->domDocumentObj->preserveWhiteSpace = true;
+			$this->domDocumentObj->formatOutput = true;
+			
+			// Create Document Rootnode <root>
+			// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
+			$this->root = $this->domDocumentObj->createElement('root');
+		}
 
 		if($page) {
 			if(!$this->pageExists($page))
@@ -1241,5 +1267,55 @@ class xsltDocument {
 		$txt = $this->domDocumentObj->createTextNode($value);
 		$element->appendChild($txt);
 		$this->root->appendChild($element);
+	}
+	
+	public function loadModules() {
+		foreach($this->surface as $name => $arr) {
+			module::add($name, $arr['class'], $arr['file'], $objSurface);
+			$objSurface->setElements($arr['elements']);
+		}
+		foreach($this->operator as $name => $arr) {
+			module::add($name, $arr['class'], $arr['file'], $objOperator);
+			$objOperator->setElements($arr['elements']);
+		}
+		foreach($this->adapter as $name => $arr) {
+			module::add($name, $arr['class'], $arr['file'], $objAdapter);
+			$objAdapter->setElements($arr['elements']);
+		}
+	
+		return true;
+	}
+	
+	public function loadSurface($name) {
+		if(!array_key_exists($name, $this->surface)) {
+			return false;
+		}
+	
+		module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
+		$objSurface->setElements($elements);
+	
+		return true;
+	}
+	
+	public function loadOperator($name) {
+		if(!array_key_exists($name, $this->operator)) {
+			return false;
+		}
+	
+		module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
+		$objOperator->setElements($elements);
+	
+		return true;
+	}
+	
+	public function loadAdapter($name) {
+		if(!array_key_exists($name, $this->adapter)) {
+			return false;
+		}
+	
+		module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objAdapter);
+		$objAdapter->setElements($elements);
+	
+		return true;
 	}
 }
