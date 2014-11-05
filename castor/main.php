@@ -5,7 +5,7 @@
  * xsltDocument Main Class for castor Projects
  *
  * - Create a Page to load Controller Classes.
- * - An XML-Config, with a default or individual page/action construct couldt loaded but is not obsolete.
+ * - An XML-Config, with a default or individual page/action construct couldt loaded but is not mandatory.
  * - $this->arrPage contains Page Objects and gaves access to Local functions from Action Objects.
  * - $this->document contains main data like a basepath and a rootpage.
  * - $this->elements contains main constants from configuration and setElement() calls.
@@ -761,7 +761,7 @@ class xsltDocument {
 					throw new Exception('Page "'.$page.'" is not defined!');
 				}
 			} else {
-				throw new Exception('Obsolete Element config/root is not set!');
+				throw new Exception('Mandatory Element config/root is not defined!');
 			}
 		}
 
@@ -968,7 +968,7 @@ class xsltDocument {
 				break;
 		}
 
-		// A redering-type isnt obsolete, if no stylesheet was given, relates #006
+		// A redering-type isnt mandatory, if no stylesheet was given, relates #006
 		switch($objPage->getRendering($action)) {
 			case 'client':
 				$stylesheet = $objPage->getStylesheet($action);
