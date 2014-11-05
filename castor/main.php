@@ -32,7 +32,7 @@
  *
  *		- Surface Interfaces was developed at 25.07.2013
  *		- Operator Childs was developed at 27.07.2013
- *		- Adapter Childs was developed at ~08.2013
+ *		- Adapter Pattern was developed at ~08.2013
  *
  * #010 Maybe, the inclusion of "overwrite" Tag attributes, is a good idea for later versions. Detect #010 comments for more inspirations and ideas. 
  * #011 Maybe, use Document Objects. For Document Elements and Nodes couldt be a place in its own object "Document", for main constants and relations.
