@@ -13,8 +13,19 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</return>
-		<xsl:apply-templates select="//sitemap/page[@name = //castor/pagename]/action[@name = //castor/actionname]" />
+		<index>
+			<xsl:value-of select="//sitemap/page[@name = //castor/pagename]/@index" />
+		</index>
+		<title>
+			<xsl:value-of select="//sitemap/page[@name = //castor/pagename]/@title" />
+		</title>
+		<actiontitle>
+			<xsl:value-of select="//sitemap/page[@name = //castor/pagename]/action[@name = //castor/actionname]/@title" />
+		</actiontitle>
 		<xsl:apply-templates select="//sitemap/page[@name = //castor/pagename]/arr" />
+		<xsl:apply-templates select="//sitemap/page[@name = //castor/pagename]/constant" />
+		<xsl:apply-templates select="//sitemap/page[@name = //castor/pagename]/expand" />
+		<xsl:apply-templates select="//sitemap/page[@name = //castor/pagename]/action[@name = //castor/actionname]" />
 	</action>
 </xsl:template>
 
@@ -57,7 +68,8 @@
 			</style>
 		</xsl:otherwise>
 	</xsl:choose>
-	<xsl:apply-templates select="style" />
+	<xsl:apply-templates select="constant" />
+	<xsl:apply-templates select="expand" />
 	<xsl:apply-templates select="arr" />
 </xsl:template>
 
@@ -71,6 +83,25 @@
 			</var>
 		</xsl:for-each>
 	</arr>
+</xsl:template>
+
+<xsl:template match="constant">
+	<constant>
+		<xsl:attribute name="name"><xsl:value-of select="@name" /></xsl:attribute>
+		<xsl:value-of select="." />
+	</constant>
+</xsl:template>
+
+<xsl:template match="expand">
+	<expand node="frontFooter">
+		<xsl:attribute name="node"><xsl:value-of select="@node" /></xsl:attribute>
+		<xsl:for-each select="add">
+		<add>
+			<xsl:attribute name="name"><xsl:value-of select="@name" /></xsl:attribute>
+			<xsl:value-of select="." />
+		</add>
+		</xsl:for-each>
+	</expand>
 </xsl:template>
 
 </xsl:stylesheet>

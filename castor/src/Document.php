@@ -71,7 +71,49 @@ abstract class Document extends Castor {
 		if(!$return)
 			throw new Exception('No returntyp defined...');
 
+		$index = false;
+		$indexNode = $template->getElementsByTagName('index');
+		if($indexNode) {
+			if($indexNode->length > 0) {
+				$indexItem = $indexNode->item(0);
+		
+				if($indexItem->nodeValue != '') {
+					$index = $indexItem->nodeValue;
+				}
+			}
+		}
+		
+		$this->sitemap[$pagename]->setIndex($index);
+
 		$this->sitemap[$pagename]->addAction($actionname, $class, $method);
+
+		$title = false;
+		$titleNode = $template->getElementsByTagName('title');
+		if($titleNode) {
+			if($titleNode->length > 0) {
+				$titleItem = $titleNode->item(0);
+		
+				if($titleItem->nodeValue != '') {
+					$title = $titleItem->nodeValue;
+				}
+			}
+		}
+		
+		$this->sitemap[$pagename]->setTitle($title);
+
+		$title = false;
+		$titleNode = $template->getElementsByTagName('actiontitle');
+		if($titleNode) {
+			if($titleNode->length > 0) {
+				$titleItem = $titleNode->item(0);
+		
+				if($titleItem->nodeValue != '') {
+					$title = $titleItem->nodeValue;
+				}
+			}
+		}
+
+		$this->sitemap[$pagename]->setActionTitle($title, $actionname);
 
 		$style = false;
 		$rendering = false;
@@ -113,6 +155,49 @@ abstract class Document extends Castor {
 			$this->sitemap[$pagename]->setElement($arrname, $arr);
 
 			unset($arr);
+		}
+
+		// Add Constants for Action
+		$constantNodes = $template->getElementsByTagName('constant');
+		if($constantNodes) {
+			for($x = 0; $x < $constantNodes->length; $x++) {
+				$var = $constantNodes->item($x);
+		
+				$this->sitemap[$pagename]->setLocalConstant($actionname, $var->getAttribute('name'), $var->nodeValue);
+			}
+		}
+		
+		$expand = array();
+		
+		$expandNodes = $template->getElementsByTagName('expand');
+		if($expandNodes && $expandNodes->length > 0) {
+			$j = 0;
+			while($j < $expandNodes->length) {
+				$var = $expandNodes->item($j);
+				$name = $var->getAttribute('node');
+		
+				$expand[$name] = array();
+	
+				$addNodes = $var->getElementsByTagName('add');
+				if($addNodes && $addNodes->length > 0) {
+					$length = 0;
+					$expand[$name][$length] = array();
+	
+					for($g = 0; $g < $addNodes->length; $g++) {
+						$varAddNode = $addNodes->item($g);
+						$addNodeName = $varAddNode->getAttribute('name');
+	
+						$expand[$name][$length][$addNodeName] = $varAddNode->nodeValue;
+					}
+					$length = 0;
+				} else {
+					$expand[$name][0] = array();
+				}
+		
+				$j++;
+			}	
+
+			$this->sitemap[$pagename]->setLocalNodes($actionname, $expand);				
 		}
 
 		return true;

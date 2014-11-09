@@ -5,6 +5,7 @@ require_once(SITE_PATH."/src/Document.php");
 class xsltDocument extends Document {
 	// PHP DOMDocument / implements an xml root node and will filled after loadPage or run
 	private $domDocumentObj = false;
+	private $root;
 
 	// If a page exists in array $this->arrPage, return true
 	public function pageExists($name) {
@@ -17,7 +18,7 @@ class xsltDocument extends Document {
 	private function expandNodes($objPage, $action) {
 		// Expand Nodes for Page
 		$expand = $objPage->getNodes();
-	
+
 		if($expand && count($expand) > 0) {
 			foreach($expand as $index => $value) {
 				if(is_array($value)) {
@@ -169,6 +170,7 @@ class xsltDocument extends Document {
 						$this->root->appendChild($node);
 					}
 						
+					$expand = $objPage->getLocalNodes($action);
 					$this->expandNodes($objPage, $action);
 				}
 	

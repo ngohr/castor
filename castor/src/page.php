@@ -200,6 +200,7 @@ class Page {
 
 	public function setLocalNodes($action, $arr) {
 		if($this->actionExists($action)) {
+
 			$this->arrAction[$action]->setNodes($arr);
 		} else {
 			return false;

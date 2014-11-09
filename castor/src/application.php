@@ -97,10 +97,12 @@ class Application {
 
 				$elementPage->appendChild($elementPagename);
 
-				$elementTitle = $domDocumentObj->createElement('title');
-				$text = $domDocumentObj->createTextNode($obj->getTitle());
-				$elementTitle->appendChild($text);
-				$elementPage->appendChild($elementTitle);
+				if($obj->getTitle() && $obj->getTitle() != "") {
+					$elementTitle = $domDocumentObj->createElement('title');
+					$text = $domDocumentObj->createTextNode($obj->getTitle());
+					$elementTitle->appendChild($text);
+					$elementPage->appendChild($elementTitle);
+				}
 
 				$elementIndex = $domDocumentObj->createElement('index');
 				$text = $domDocumentObj->createTextNode($obj->getIndex());
@@ -128,12 +130,14 @@ class Application {
 						$elementActionname->appendChild($text);
 						
 						$elementAction->appendChild($elementActionname);
-						
-						$elementActiontitle = $domDocumentObj->createElement('title');
-						$text = $domDocumentObj->createTextNode($objAction->getTitle());
-						$elementActiontitle->appendChild($text);
-						
-						$elementAction->appendChild($elementActiontitle);
+
+						if($objAction->getTitle() && $objAction->getTitle() != "") {
+							$elementActiontitle = $domDocumentObj->createElement('title');
+							$text = $domDocumentObj->createTextNode($objAction->getTitle());
+							$elementActiontitle->appendChild($text);
+							
+							$elementAction->appendChild($elementActiontitle);
+						}
 	
 						if($constants = $objAction->getConstants()) {
 							foreach($constants as $constantName => $valueConstant) {
