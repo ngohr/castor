@@ -17,7 +17,7 @@
 				<style renderby="server">/var/www/htdocs/styles/xss/index.xsl</style>
 			</action>
 			<action name="second">
-				<style renderby="server">/var/www/htdocs/styles/xss/index.xsl</style>
+				<style renderby="server">/var/www/htdocs/styles/xss/second.xsl</style>
 			</action>
 		</page>
 	</sitemap>
