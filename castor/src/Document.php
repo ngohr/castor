@@ -1,14 +1,20 @@
 <?php
 
-require_once(SITE_PATH."/src/Application.php");
 require_once(SITE_PATH."/src/page.php");
 
 abstract class Document extends Castor {
 	abstract function loadPage($pagename, $actionname);
 
-	public function createAction($pagename, $actionname, $template) {
+	public function createPage($pagename) {
 		if(!array_key_exists($pagename, $this->sitemap)) {
 			$this->sitemap[$pagename] = new Page($pagename);
+			$this->sitemap[$pagename]->setName($pagename);
+		}
+	}
+
+	public function createAction($pagename, $actionname, $template) {
+		if(!array_key_exists($pagename, $this->sitemap)) {
+			return false;
 		}
 
 		$fileNode = $template->getElementsByTagName('file');
@@ -98,7 +104,7 @@ abstract class Document extends Castor {
 				}
 			}
 		}
-		
+
 		$this->sitemap[$pagename]->setTitle($title);
 
 		$title = false;
@@ -166,9 +172,9 @@ abstract class Document extends Castor {
 				$this->sitemap[$pagename]->setLocalConstant($actionname, $var->getAttribute('name'), $var->nodeValue);
 			}
 		}
-		
+
 		$expand = array();
-		
+
 		$expandNodes = $template->getElementsByTagName('expand');
 		if($expandNodes && $expandNodes->length > 0) {
 			$j = 0;
@@ -206,12 +212,6 @@ abstract class Document extends Castor {
 	public function setElements($arrname, $arr) {
 		foreach($this->sitemap as $index => $pageObj) {
 			$pageObj->setElement($arrname, $arr);
-		}
-	}
-
-	public function setFiles($file) {
-		foreach($this->sitemap as $index => $pageObj) {
-			$pageObj->addFile($file);
 		}
 	}
 }

@@ -41,6 +41,7 @@ class Action {
 	private $title = "";
 	private $cacheApplied = false;
 	private $mimeType = false;
+	private $file = false;
 
 	private $expand = array();
 
@@ -76,6 +77,14 @@ class Action {
 	
 	public function getTitle() {
 		return $this->title;
+	}
+
+	public function setFile($value) {
+		$this->file = $value;
+	}
+
+	public function getFile() {
+		return $this->file;
 	}
 
 	public function setClass($name) {

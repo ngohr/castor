@@ -106,7 +106,7 @@ class xsltDocument extends Document {
 		// Set Page Array for Sitemap Call
 		$objPage->setSitemap($this->sitemap);
 
-		$objPage->loadFiles();
+		$objPage->loadFiles($action);
 		$returnType = $objPage->getReturnTyp($action);
 		if(!$returnType)
 			$returnType = $objPage->getReturnTyp();
@@ -352,5 +352,23 @@ class xsltDocument extends Document {
 		echo $output->saveHTML();
 	
 		return true;
+	}
+
+	public function expandNode($index, $value) {
+		// Create DomDocument Object
+		if(!$this->domDocumentObj) {
+			$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+			$this->domDocumentObj->preserveWhiteSpace = true;
+			$this->domDocumentObj->formatOutput = true;
+		
+			// Create Document Rootnode <root>
+			// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
+			$this->root = $this->domDocumentObj->createElement('root');
+		}
+
+		$element = $this->domDocumentObj->createElement($index);
+		$txt = $this->domDocumentObj->createTextNode($value);
+		$element->appendChild($txt);
+		$this->root->appendChild($element);
 	}
 }

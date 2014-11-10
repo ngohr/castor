@@ -2,7 +2,8 @@
 
 define('SITE_PATH', realpath(dirname(__FILE__)));
 
-require_once(SITE_PATH."/src/Application.php");
+require_once(SITE_PATH."/src/application.php");
+require_once(SITE_PATH."/src/elements.php");
 require_once(SITE_PATH."/src/module.php");
 require_once(SITE_PATH."/src/surface.php");
 require_once(SITE_PATH."/src/operator.php");
@@ -29,7 +30,7 @@ abstract class Castor {
 
 	abstract function createAction($pagename, $actionname, $templateObj);
 
-	public function __construct($file) {
+	public function __construct($file, $pagename = false, $actionname = false) {
 		// Create DomDocument Object
 		$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
 		$this->domDocumentObj->preserveWhiteSpace = true;
@@ -128,8 +129,6 @@ abstract class Castor {
 						$classname = $classNode->item(0)->nodeValue;
 		
 						$this->surface[$surfaceName]['class'] = $classname;
-		
-						// module::add($surfaceName, $classname, $file, $objSurface);
 					}
 		
 					// Load Arrays for surface nodes...
@@ -153,12 +152,7 @@ abstract class Castor {
 								
 							unset($arr);
 						}
-		
-							
 					}
-		
-					// $objSurface->setElements($elements);
-					// unset($elements);
 				}
 			}
 		}
@@ -293,20 +287,68 @@ abstract class Castor {
 					for($f = 0; $f < $actionsNodes->length; $f++) {
 						$actionNode = $actionsNodes->item($f);
 						$action = $actionNode->getAttribute('name');
+						
+						if($pagename && $actionname) {
+							if($page == $pagename && $action == $actionname) {
+								$this->load($page, $action);
+							} else {
+								$this->createPage($page);
+								$index = $pagenode->getAttribute('index');
+								$this->sitemap[$page]->setIndex($index);
+							}	
+						} elseif($pagename && !$actionname) {
+							if($page == $pagename) {
+								$this->load($page, $action);
+							} else {
+								$this->createPage($page);
+								$index = $pagenode->getAttribute('index');
+								$this->sitemap[$page]->setIndex($index);
+							}
+						} else {
+							$this->load($page, $action);
+						}
+					}
+				}
+				
+				if(array_key_exists($page, $this->sitemap) && $this->sitemap[$page]) {
+					// Add Constants for Page
+					$constantNodes = $pagenode->getElementsByTagName('constant');
+					if($constantNodes) {
+						for($f = 0; $f < $constantNodes->length; $f++) {
+							$item = $constantNodes->item($f);
+	
+							if($item->parentNode->nodeName == 'page') {
+								$this->sitemap[$page]->addConstant($item->getAttribute('name'), $item->nodeValue);
+							}
+						}
+					}
+					unset($arr);
+	
+					// Add files for page
+					$filesNode = $pagenode->getElementsByTagName('file');
+					for($f = 0; $f < $filesNode->length; $f++) {
+						if($filesNode && $filesNode->item(0)) {
+							if(!file_exists($this->getRootpath()."/".$filesNode->item($f)->nodeValue)) {
+								throw new Exception('File '.$this->getRootpath()."/".$filesNode->item($f)->nodeValue.' not exists!');
+							}
+							$file = $this->getRootpath()."/".$filesNode->item($f)->nodeValue;
+							$this->sitemap[$page]->addFile($file);
+						}
+					}
 
-						$this->load($page, $action);
+					// Add Rootfile
+					$this->sitemap[$page]->addFile($this->getRootpath()."/".$this->getRootfile());
+
+					// Add Rootelements
+					if(count($this->elements) > 0) {
+						foreach($this->elements as $index => $arr) {
+							$this->sitemap[$page]->setElement($index, $arr);
+						}
 					}
 				}
 			}
 		}
 
-		if(count($this->elements) > 0) {
-			foreach($this->elements as $index => $arr) {
-				$this->setElements($index, $arr);
-			}
-		}
-		
-		$this->setFiles($this->getRootpath()."/".$this->getRootfile());
 		$this->loadModules();
 	}
 
@@ -336,7 +378,7 @@ abstract class Castor {
 			$rootNode->appendChild($node);
 		}
 		$domDocumentObj->appendChild($rootNode);
-
+		
 		$objCustomizer = new DomDocument();
 
 		if(!file_exists(SITE_PATH."/templates/document.xsl"))
@@ -349,6 +391,7 @@ abstract class Castor {
 
 		$template = $xpr->transformToDoc($domDocumentObj);
 
+		$this->createPage($page);
 		if(!$this->createAction($page, $action, $template)) {
 			throw new Exception("createAction(".$page.", ".$action."); failed...");
 		}

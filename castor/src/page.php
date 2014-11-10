@@ -83,6 +83,10 @@ class Page {
 		return true;
 	}
 
+	public function addLocalFile($file, $action) {
+		$this->arrAction[$action]->setFile($file);
+	}
+
 	public function addAction($name, $classname = false, $method = flase) {
 		if(!$classname) {
 			if(!$this->classname) {
@@ -112,6 +116,8 @@ class Page {
 	}
 
 	public function getActions() {
+		$names = array();
+
 		foreach($this->arrAction as $index => $obj)
 			$names[] = $index;
 
@@ -294,7 +300,19 @@ class Page {
 		$this->arrSurface[$name] = $obj;
 	}
 
-	public function loadFiles() {
+	public function loadFiles($action = false) {
+		if($action) {
+			if($file = $this->arrAction[$action]->getFile()) {
+				if(!file_exists($file)) {
+					throw new Exception('File: '.$file.' for Page "'.$page.'" not exists!');
+				} else {
+					require_once($file);
+
+					return true;
+				}
+			}
+		}
+
 		foreach($this->arrFile as $index => $file) {
 			if(!file_exists($file)) {
 				throw new Exception('File: '.$file.' for Page "'.$page.'" not exists!');
@@ -302,6 +320,8 @@ class Page {
 				require_once($file);
 			}
 		}
+
+		return true;
 	}
 
 	// Run all actions in $this->arrAction, setElements, setPagename and return Array($objAction->run())
