@@ -28,9 +28,9 @@ abstract class Castor {
 
 	private $surface = array();
 
-	abstract function createAction($pagename, $actionname, $templateObj);
+	abstract function createActions($pagename, $templateObj);
 
-	public function __construct($file, $pagename = false, $actionname = false) {
+	public function __construct($file, $pagename = false, $actionname = false, $notCreate = false) {
 		// Create DomDocument Object
 		$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
 		$this->domDocumentObj->preserveWhiteSpace = true;
@@ -179,7 +179,7 @@ abstract class Castor {
 							throw new Exception('File '.$filesNode->item(0)->nodeValue.' not exists!');
 						}
 						$file = $filesNode->item(0)->nodeValue;
-		
+
 						$this->operator[$operatorName]['file'] = $file;
 		
 						$classNode = $operatornode->getElementsByTagName('class');
@@ -193,7 +193,7 @@ abstract class Castor {
 						$arr = array();
 		
 						$item = $arrNodes->item($e);
-		
+
 						if($item->parentNode->nodeName == 'operator') {
 							$arrname = $item->getAttribute('name');
 							$varNodes = $item->getElementsByTagName('var');
@@ -235,22 +235,22 @@ abstract class Castor {
 							throw new Exception('File '.$files->item(0)->nodeValue.' not exists!');
 						}
 						$file = $filesNode->item(0)->nodeValue;
-		
+
 						$this->adapter[$adapterName]['file'] = $file;
-		
+
 						$classNode = $adapternode->getElementsByTagName('class');
 						$classname = $classNode->item(0)->nodeValue;
 						$this->adapter[$adapterName]['class'] = $classname;
 					}
-		
+
 					// Load Arrays for operator nodes...
 					$this->adapter[$adapterName]['elements'] = array();
 					$arrNodes = $adapternode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
-		
+
 						$item = $arrNodes->item($e);
-		
+
 						if($item->parentNode->nodeName == 'adapter') {
 							$arrname = $item->getAttribute('name');
 							$varNodes = $item->getElementsByTagName('var');
@@ -258,7 +258,7 @@ abstract class Castor {
 								$var = $varNodes->item($f);
 								$name = $var->getAttribute('name');
 								$value = $var->nodeValue;
-									
+
 								$arr[$name] = $value;
 							}
 							$this->adapter[$adapterName]['elements'][$arrname] = $arr;
@@ -277,74 +277,23 @@ abstract class Castor {
 			for($i = 0; $i < $nodes->length; $i++) {
 				$pagenode = $nodes->item($i);
 				$page = $pagenode->getAttribute('name');
-				if(array_key_exists($page, $this->sitemap)) {
-					throw new Exception("Page: ".$page." is not inimitable!");
-				}
 
-				// Actions for page /sitemap/page/action
-				$actionsNodes = $pagenode->getElementsByTagName('action');
-				if($actionsNodes) {
-					for($f = 0; $f < $actionsNodes->length; $f++) {
-						$actionNode = $actionsNodes->item($f);
-						$action = $actionNode->getAttribute('name');
-						
-						if($pagename && $actionname) {
-							if($page == $pagename && $action == $actionname) {
-								$this->load($page, $action);
-							} else {
-								$this->createPage($page);
-								$index = $pagenode->getAttribute('index');
-								$this->sitemap[$page]->setIndex($index);
-							}	
-						} elseif($pagename && !$actionname) {
-							if($page == $pagename) {
-								$this->load($page, $action);
-							} else {
-								$this->createPage($page);
-								$index = $pagenode->getAttribute('index');
-								$this->sitemap[$page]->setIndex($index);
-							}
-						} else {
-							$this->load($page, $action);
-						}
+				if($pagename && $actionname) {
+					if($page == $pagename) {
+						$this->load($page, $actionname);
+					} else {
+						if(!$notCreate)
+							$this->createPage($page, $pagenode);
 					}
-				}
-				
-				if(array_key_exists($page, $this->sitemap) && $this->sitemap[$page]) {
-					// Add Constants for Page
-					$constantNodes = $pagenode->getElementsByTagName('constant');
-					if($constantNodes) {
-						for($f = 0; $f < $constantNodes->length; $f++) {
-							$item = $constantNodes->item($f);
-	
-							if($item->parentNode->nodeName == 'page') {
-								$this->sitemap[$page]->addConstant($item->getAttribute('name'), $item->nodeValue);
-							}
-						}
+				} elseif($pagename && !$actionname) {
+					if($page == $pagename) {
+						$this->load($page);
+					} else {
+						if(!$notCreate)
+							$this->createPage($page, $pagenode);
 					}
-					unset($arr);
-	
-					// Add files for page
-					$filesNode = $pagenode->getElementsByTagName('file');
-					for($f = 0; $f < $filesNode->length; $f++) {
-						if($filesNode && $filesNode->item(0)) {
-							if(!file_exists($this->getRootpath()."/".$filesNode->item($f)->nodeValue)) {
-								throw new Exception('File '.$this->getRootpath()."/".$filesNode->item($f)->nodeValue.' not exists!');
-							}
-							$file = $this->getRootpath()."/".$filesNode->item($f)->nodeValue;
-							$this->sitemap[$page]->addFile($file);
-						}
-					}
-
-					// Add Rootfile
-					$this->sitemap[$page]->addFile($this->getRootpath()."/".$this->getRootfile());
-
-					// Add Rootelements
-					if(count($this->elements) > 0) {
-						foreach($this->elements as $index => $arr) {
-							$this->sitemap[$page]->setElement($index, $arr);
-						}
-					}
+				} else {
+					$this->load($page);
 				}
 			}
 		}
@@ -352,7 +301,7 @@ abstract class Castor {
 		$this->loadModules();
 	}
 
-	public function load($page, $action) {
+	public function load($pagename, $actionname = false) {
 		// Create DomDocument Object
 		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
 		$domDocumentObj->preserveWhiteSpace = true;
@@ -363,14 +312,16 @@ abstract class Castor {
 		$castorNode = $domDocumentObj->createElement('castor');
 
 		$pageNode = $domDocumentObj->createElement('pagename');
-		$txt = $domDocumentObj->createTextNode($page);
+		$txt = $domDocumentObj->createTextNode($pagename);
 		$pageNode->appendChild($txt);
 		$castorNode->appendChild($pageNode);
 
-		$actionNode = $domDocumentObj->createElement('actionname');
-		$txt = $domDocumentObj->createTextNode($action);
-		$actionNode->appendChild($txt);
-		$castorNode->appendChild($actionNode);
+		if($actionname) {
+			$actionNode = $domDocumentObj->createElement('actionname');
+			$txt = $domDocumentObj->createTextNode($actionname);
+			$actionNode->appendChild($txt);
+			$castorNode->appendChild($actionNode);
+		}
 
 		$rootNode->appendChild($castorNode);
 		if($this->sitemapNode->item(0)) {
@@ -378,8 +329,10 @@ abstract class Castor {
 			$rootNode->appendChild($node);
 		}
 		$domDocumentObj->appendChild($rootNode);
-		
+
 		$objCustomizer = new DomDocument();
+		$objCustomizer->preserveWhiteSpace = true;
+		$objCustomizer->formatOutput = true;
 
 		if(!file_exists(SITE_PATH."/templates/document.xsl"))
 			throw new Exception ('System Template: document.xsl not exists!');
@@ -390,10 +343,8 @@ abstract class Castor {
 		$xpr->importStylesheet($objCustomizer);
 
 		$template = $xpr->transformToDoc($domDocumentObj);
-
-		$this->createPage($page);
-		if(!$this->createAction($page, $action, $template)) {
-			throw new Exception("createAction(".$page.", ".$action."); failed...");
+		if(!$this->createActions($pagename, $template)) {
+			throw new Exception("createActions(".$pagename.", DomObject); failed...");
 		}
 	}
 

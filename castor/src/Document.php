@@ -5,205 +5,201 @@ require_once(SITE_PATH."/src/page.php");
 abstract class Document extends Castor {
 	abstract function loadPage($pagename, $actionname);
 
-	public function createPage($pagename) {
+	public function createPage($pagename, $pagenode) {
 		if(!array_key_exists($pagename, $this->sitemap)) {
-			$this->sitemap[$pagename] = new Page($pagename);
-			$this->sitemap[$pagename]->setName($pagename);
+			$objPage = new Page($pagename);
+			$objPage->setName($pagename);
+
+			$index = $pagenode->getAttribute('index');
+			$objPage->setIndex($index);
+			$returnTyp = $pagenode->getAttribute('return');
+			$objPage->setReturnTyp($returnTyp);
+			$titleNode = $pagenode->getElementsByTagName('title');
+			$title = $titleNode->item(0)->nodeValue;
+			$objPage->setTitle($title);
+
+			// Add Rootfile
+			$objPage->addFile($this->getRootpath()."/".$this->getRootfile());
+
+			// Add files for page
+			$filesNode = $pagenode->getElementsByTagName('file');
+			for($f = 0; $f < $filesNode->length; $f++) {
+				if($filesNode && $filesNode->item($f)) {
+					if(!file_exists($this->getRootpath()."/".$filesNode->item($f)->nodeValue)) {
+						throw new Exception('File '.$this->getRootpath()."/".$filesNode->item($f)->nodeValue.' not exists!');
+					}
+
+					if($this->getRootpath())
+						$file = $this->getRootpath().'/'.$filesNode->item($f)->nodeValue;
+					else
+						$file = $filesNode->item($f)->nodeValue;
+
+					$objPage->addFile($file);
+				}
+			}
+
+			// Add Rootelements
+			if(count($this->elements) > 0) {
+				foreach($this->elements as $index => $arr) {
+					$objPage->setElement($index, $arr);
+				}
+			}
+
+			// Add elements
+			$arrNodes = $pagenode->getElementsByTagName('arr');
+			for($e = 0; $e < $arrNodes->length; $e++) {
+				$arr = array();
+			
+				$item = $arrNodes->item($e);
+				if($item->parentNode->nodeName == 'page') {
+					$arrname = $item->getAttribute('name');
+					$variables = $item->getElementsByTagName('var');
+					for($f = 0; $f < $variables->length; $f++) {
+						$var = $variables->item($f);
+						$name = $var->getAttribute('name');
+						$value = $var->nodeValue;
+				
+						$arr[$name] = $value;
+					}
+	
+					$objPage->setElement($arrname, $arr);
+				}
+			
+				unset($arr);
+			}
+
+			// Add Constants for Page
+			$constantNodes = $pagenode->getElementsByTagName('constant');
+			if($constantNodes) {
+				for($f = 0; $f < $constantNodes->length; $f++) {
+					$item = $constantNodes->item($f);
+					if($item->parentNode->nodeName == 'page') {
+						$objPage->addConstant($item->getAttribute('name'), $item->nodeValue);
+					}
+				}
+			}
+			unset($arr);
+
+			$this->sitemap[$pagename] = $objPage;
+
+			return true;
 		}
+
+		return false;
 	}
 
-	public function createAction($pagename, $actionname, $template) {
+	public function createActions($pagename, $template) {
 		if(!array_key_exists($pagename, $this->sitemap)) {
-			return false;
+			$this->createPage($pagename, $template->getElementsByTagName('page')->item(0));
 		}
 
-		$fileNode = $template->getElementsByTagName('file');
-		for($e = 0; $e < $fileNode->length; $e++) {
-			$item = $fileNode->item($e);
-			if($item->nodeValue) {
-				if($this->getRootpath())
-					$file = $this->getRootpath().'/'.$item->nodeValue;
-				else
-					$file = $item->nodeValue;
-		
-				$this->sitemap[$pagename]->addFile($file);
-			}
-		
-			$e++;
-		}
+		$actionNodes = $template->getElementsByTagName('action');
 
-		$class = false;
-		$classNode = $template->getElementsByTagName('class');
-		if($classNode) {
-			if($classNode->length > 0) {
-				$classItem = $classNode->item(0);
+		for($i = 0; $i < $actionNodes->length; $i++) {
+			$actionNode = $actionNodes->item($i);
+			if($actionNode) {
+				$actionname = $actionNode->getAttribute('name');
+				$classNode = $actionNode->getElementsByTagName('class');
+				$class = $classNode->item(0)->nodeValue;
+				$methodNode = $actionNode->getElementsByTagName('method');
+				$method = $methodNode->item(0)->nodeValue;
 
-				if($classItem->nodeValue != '') {
-					$class = $classItem->nodeValue;
-				}
-			}
-		}
-
-		if(!$class)
-			throw new Exception('No class defined...');
-
-		$method = false;
-		$methodNode = $template->getElementsByTagName('method');
-		if($methodNode) {
-			if($methodNode->length > 0) {
-				$methodItem = $methodNode->item(0);
-		
-				if($methodItem->nodeValue != '') {
-					$method = $methodItem->nodeValue;
-				}
-			}
-		}
-		
-		if(!$method)
-			throw new Exception('No method defined...');
-
-		$return = false;
-		$returnNode = $template->getElementsByTagName('return');
-		if($returnNode) {
-			if($returnNode->length > 0) {
-				$returnItem = $returnNode->item(0);
-		
-				if($returnItem->nodeValue != '') {
-					$return = $returnItem->nodeValue;
-				}
-			}
-		}
-		
-		if(!$return)
-			throw new Exception('No returntyp defined...');
-
-		$index = false;
-		$indexNode = $template->getElementsByTagName('index');
-		if($indexNode) {
-			if($indexNode->length > 0) {
-				$indexItem = $indexNode->item(0);
-		
-				if($indexItem->nodeValue != '') {
-					$index = $indexItem->nodeValue;
-				}
-			}
-		}
-		
-		$this->sitemap[$pagename]->setIndex($index);
-
-		$this->sitemap[$pagename]->addAction($actionname, $class, $method);
-
-		$title = false;
-		$titleNode = $template->getElementsByTagName('title');
-		if($titleNode) {
-			if($titleNode->length > 0) {
-				$titleItem = $titleNode->item(0);
-		
-				if($titleItem->nodeValue != '') {
-					$title = $titleItem->nodeValue;
-				}
-			}
-		}
-
-		$this->sitemap[$pagename]->setTitle($title);
-
-		$title = false;
-		$titleNode = $template->getElementsByTagName('actiontitle');
-		if($titleNode) {
-			if($titleNode->length > 0) {
-				$titleItem = $titleNode->item(0);
-		
-				if($titleItem->nodeValue != '') {
-					$title = $titleItem->nodeValue;
-				}
-			}
-		}
-
-		$this->sitemap[$pagename]->setActionTitle($title, $actionname);
-
-		$style = false;
-		$rendering = false;
-		$styleNode = $template->getElementsByTagName('style');
-		if($styleNode) {
-			if($styleNode->length > 0) {
-				$styleItem = $styleNode->item(0);
-		
-				if($styleItem->nodeValue != '') {
-					$style = $styleItem->nodeValue;
-					$rendering = $styleItem->getAttribute('renderby');
-				}
-			}
-		}
-
-		if($style) {
-			$this->sitemap[$pagename]->setStylesheet($actionname, $style);
-			if($rendering)
-				$this->sitemap[$pagename]->setRendering($actionname, $rendering);
-		}
-
-		$this->sitemap[$pagename]->setReturnTyp($return, $actionname);
-
-		$arrNodes = $template->getElementsByTagName('arr');
-		for($i = 0; $i < $arrNodes->length; $i++) {
-			$arr = array();
-		
-			$item = $arrNodes->item($i);
-			$arrname = $item->getAttribute('name');
-			$variables = $item->getElementsByTagName('var');
-			for($f = 0; $f < $variables->length; $f++) {
-				$var = $variables->item($f);
-				$name = $var->getAttribute('name');
-				$value = $var->nodeValue;
-	
-				$arr[$name] = $value;
-			}
-
-			$this->sitemap[$pagename]->setElement($arrname, $arr);
-
-			unset($arr);
-		}
-
-		// Add Constants for Action
-		$constantNodes = $template->getElementsByTagName('constant');
-		if($constantNodes) {
-			for($x = 0; $x < $constantNodes->length; $x++) {
-				$var = $constantNodes->item($x);
-		
-				$this->sitemap[$pagename]->setLocalConstant($actionname, $var->getAttribute('name'), $var->nodeValue);
-			}
-		}
-
-		$expand = array();
-
-		$expandNodes = $template->getElementsByTagName('expand');
-		if($expandNodes && $expandNodes->length > 0) {
-			$j = 0;
-			while($j < $expandNodes->length) {
-				$var = $expandNodes->item($j);
-				$name = $var->getAttribute('node');
-		
-				$expand[$name] = array();
-	
-				$addNodes = $var->getElementsByTagName('add');
-				if($addNodes && $addNodes->length > 0) {
-					$length = 0;
-					$expand[$name][$length] = array();
-	
-					for($g = 0; $g < $addNodes->length; $g++) {
-						$varAddNode = $addNodes->item($g);
-						$addNodeName = $varAddNode->getAttribute('name');
-	
-						$expand[$name][$length][$addNodeName] = $varAddNode->nodeValue;
+				$this->sitemap[$pagename]->addAction($actionname, $class, $method);
+				$fileNode = $actionNode->getElementsByTagName('file');
+				for($e = 0; $e < $fileNode->length; $e++) {
+					$item = $fileNode->item($e);
+					if($item->nodeValue) {
+						if($this->getRootpath())
+							$file = $this->getRootpath().'/'.$item->nodeValue;
+						else
+							$file = $item->nodeValue;
+				
+						$this->sitemap[$pagename]->addLocalFile($file, $actionname);
 					}
-					$length = 0;
-				} else {
-					$expand[$name][0] = array();
-				}
-		
-				$j++;
-			}	
 
-			$this->sitemap[$pagename]->setLocalNodes($actionname, $expand);				
+					$e++;
+				}
+
+				$returnType = $actionNode->getAttribute('return');
+				$this->sitemap[$pagename]->setReturnTyp($returnType, $actionname);
+				$title = $actionNode->getAttribute('title');
+				$this->sitemap[$pagename]->setActionTitle($title, $actionname);
+
+				$styleNode = $actionNode->getElementsByTagName('style');
+				if($styleNode) {
+					$renderBy = $styleNode->item(0)->getAttribute('renderby');
+					if($styleNode->item(0)->nodeValue != '') {
+						$this->sitemap[$pagename]->setStylesheet($actionname, $styleNode->item(0)->nodeValue);
+					}
+				}
+				
+				$this->sitemap[$pagename]->setRendering($actionname, $renderBy);
+
+				// Add elements for action
+				$arrNodes = $actionNode->getElementsByTagName('arr');
+				for($e = 0; $e < $arrNodes->length; $e++) {
+					$arr = array();
+				
+					$item = $arrNodes->item($e);
+					$arrname = $item->getAttribute('name');
+					$variables = $item->getElementsByTagName('var');
+					for($f = 0; $f < $variables->length; $f++) {
+						$var = $variables->item($f);
+						$name = $var->getAttribute('name');
+						$value = $var->nodeValue;
+				
+						$arr[$name] = $value;
+					}
+
+					$this->sitemap[$pagename]->setLocal($actionname, $arrname, $arr);
+
+					unset($arr);
+				}
+
+				// Add Constants for Action
+				$constantNodes = $actionNode->getElementsByTagName('constant');
+				if($constantNodes) {
+					for($e = 0; $e < $constantNodes->length; $e++) {
+						$var = $constantNodes->item($e);
+				
+						$this->sitemap[$pagename]->setLocalConstant($actionname, $var->getAttribute('name'), $var->nodeValue);
+					}
+				}
+
+				// Expand Nodes for Action
+				$expand = array();
+				
+				$expandNodes = $actionNode->getElementsByTagName('expand');
+				if($expandNodes && $expandNodes->length > 0) {
+					$j = 0;
+					while($j < $expandNodes->length) {
+						$var = $expandNodes->item($j);
+						$name = $var->getAttribute('node');
+
+						$expand[$name] = array();
+
+						$addNodes = $var->getElementsByTagName('add');
+						if($addNodes && $addNodes->length > 0) {
+							$length = 0;
+							$expand[$name][$length] = array();
+				
+							for($g = 0; $g < $addNodes->length; $g++) {
+								$varAddNode = $addNodes->item($g);
+								$addNodeName = $varAddNode->getAttribute('name');
+				
+								$expand[$name][$length][$addNodeName] = $varAddNode->nodeValue;
+							}
+							$length = 0;
+						} else {
+							$expand[$name][0] = array();
+						}
+				
+						$j++;
+					}
+
+					$this->sitemap[$pagename]->setLocalNodes($actionname, $expand);
+				}
+			}
 		}
 
 		return true;
