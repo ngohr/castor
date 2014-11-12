@@ -1,5 +1,24 @@
 <?php
 
+/*
+ *
+* Document main class extends Castor
+*
+* - Create an array includes Page and Action objects to load Controller Classes.
+* - The given sitemap from castor objects will be deconstructed with a xsl-template and elements wouldt be extracted
+* - Elements, will be given to action method, if them was set for document, page or action.
+* - Elements for Actions are individual and not available in other page actions.
+* 
+* @author
+* 
+* Nanno Gohr
+* 
+* @version
+* 
+* 1.0 / 12.11.2014
+*
+*/
+
 require_once(SITE_PATH."/src/page.php");
 
 abstract class Document extends Castor {

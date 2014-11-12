@@ -1,5 +1,28 @@
 <?php
 
+/*
+ *
+ * xsltDocument Class extends Document 
+ *
+ * - Objects of type Array or DomDocument will rendered as a xslt output or prepared for a client rendering with xsl include
+ * - Expand nodes form config expand/add nodes
+ * - $this->root extends $this->domDocumentObj with a root element and includes the main values from controller classes
+ * 
+ * @todos
+ * 
+ * #001 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
+ * #002 Returntype json and xml is not an individual for text/html, take a finnaly decission for saveXML or saveHTML ways...
+ * 
+ * @author
+ * 
+ * Nanno Gohr
+ * 
+ * @version
+ * 
+ * 1.0 / 12.11.2014
+ * 
+ */
+
 require_once(SITE_PATH."/src/Document.php");
 
 class xsltDocument extends Document {
@@ -36,7 +59,7 @@ class xsltDocument extends Document {
 				}
 			}
 		}
-	
+
 		// Expand Nodes for Actions
 		$expand = $objPage->getLocalNodes($action);
 		if($expand && count($expand) > 0) {
@@ -45,7 +68,7 @@ class xsltDocument extends Document {
 					foreach($value as $subIndex => $subValue) {
 						$node = $this->domDocumentObj->createElement($index);
 						elements::createElementRepresentation($subValue, $this->domDocumentObj, $node);
-	
+
 						$this->root->appendChild($node);
 					}
 				} else {
@@ -68,7 +91,7 @@ class xsltDocument extends Document {
 			$this->domDocumentObj->formatOutput = true;
 				
 			// Create Document Rootnode <root>
-			// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
+			// Relates @todo #001: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
 			$this->root = $this->domDocumentObj->createElement('root');
 		}
 	
@@ -111,57 +134,9 @@ class xsltDocument extends Document {
 		if(!$returnType)
 			$returnType = $objPage->getReturnTyp();
 
-		// relates #006 - Returntype json and xml is not an individual for text/html
+		// relates #002 - Returntype json and xml is not an individual for text/html
 		switch($returnType) {
 			case 'DomDocument':
-				/*
-					$saveFile = false;
-					if($objPage->localCacheApplied($action)) {
-					if(session_id() == '' || !isset($_SESSION)) {
-					session_start();
-					}
-	
-					if(session_id() != '' && isset($_SESSION)) {
-					$filename = "/tmp/".md5(base64_encode(session_id().$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'].$_SERVER['QUERY_STRING']));
-	
-					if($filename) {
-					if(!$_POST) {
-					if($objPage->getRendering($action) == "server") {
-					if(!file_exists($filename)) {
-					$saveFile = true;
-					}
-	
-					if(!$saveFile) {
-					$timeout = time() - 20;
-					if($timeout < filemtime($filename)) {
-					$handle = fopen($filename, "r");
-					$contents = fread($handle, filesize($filename));
-					fclose($handle);
-	
-					header('Content-Type: '.$objPage->getLocalMimeType($action).'; charset=UTF-8');
-	
-					echo $contents;
-						
-					return true;
-					} else {
-					$saveFile = true;
-	
-					unlink($filename);
-					}
-					}
-					} else {
-					throw new Exception("Cached Values are only valid for 'server' rendering!");
-					}
-					} else {
-					unlink($filename);
-	
-					$saveFile = true;
-					}
-					}
-					}
-					}
-					*/
-	
 				// Import the node, and all its children, to the document
 				$returnvalue = $objPage->call($action);
 				if($returnvalue) {
@@ -190,6 +165,8 @@ class xsltDocument extends Document {
 	
 			case 'text/html':
 				// Print Plain Text from $objPage->load();
+				ob_start();
+
 				if(!$action) {
 					foreach($objPage->load() as $index => $value)
 						echo $value."\n";
@@ -198,7 +175,9 @@ class xsltDocument extends Document {
 				}
 	
 				return true;
-					
+
+				ob_flush();
+
 				break;
 	
 			case 'json':
@@ -242,33 +221,7 @@ class xsltDocument extends Document {
 			case 'server':
 				$this->domDocumentObj->appendChild($this->root);
 				$stylesheet = $objPage->getStylesheet($action);
-	
-				/*
-					if(session_id() != '' && isset($_SESSION)) {
-					if($saveFile) {
-					$output = $this->getHTML($stylesheet);
-	
-					if(!$handle = fopen($filename, "a")) {
-					throw new Exception("Cannot open: ".$filename);
-					}
-						
-					if(!fwrite($handle, $output)) {
-					throw new Exception($filename." issnt writeable");
-					}
-	
-					fclose($handle);
-	
-					header('Content-Type: '.$objPage->getLocalMimeType($action).'; charset=UTF-8');
-	
-					echo $output;
-					} else {
-					$this->sendHTML($stylesheet);
-					}
-					} else {
-					$this->sendHTML($stylesheet);
-					}
-				*/
-	
+
 				$this->sendHTML($stylesheet);
 	
 				break;
@@ -281,7 +234,7 @@ class xsltDocument extends Document {
 					
 				break;
 	
-				// relates todo #006
+			// relates todo #002
 			case 'xml':
 				header('Content-type: text/xml; charset=UTF-8');
 	

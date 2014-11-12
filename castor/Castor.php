@@ -1,5 +1,33 @@
 <?php
 
+/*
+ * 
+ * The Castor main class
+ * 
+ * - Documents wouldt extend Castor to construct the given sitemap
+ * - The given sitemap from config files will be deconstructed with a xsl-template and elements wouldt be extracted
+ * - The prepared xml will given to childs and a method named createActions
+ * - $this->sitemap contains an array with Page and Action objects prepared by Document classes
+ * - Tags from config/document will extracted here and only the sitemap tag will prepared for document classes
+ * - Also Castor modules will prepared here and loaded with $this->loadModules();
+ * - Elements in document or module nodes will prepared here and given to the sitemap before Document calls loadPage()
+ * 
+ * @todos
+ * 
+ * #001 loadModules() couldt called manually or module tags couldt located in page or action namespaces 
+ * #002 An include tag shouldt extend the config
+ * #003 Test sensitive factory classes in object page, respective there shouldt be a place for non Application Object Childs in later versions.
+ * #004 Implement modules/plugins respective db class loaders or elements and constants like an OBJ.
+ *		Maybe a deflect relation for constant arrays, couldt blame a method with params out of constants.
+ *
+ *		- Surface Interfaces was developed at 25.07.2013
+ *		- Operator Childs was developed at 27.07.2013
+ *		- Adapter Pattern was developed at ~May 2014
+ * #005 Use DocumentTypes to valid xml configurations and/or revalidate created documents.
+ * #006 Use <var> Elements for Surface and Operator directives, in a simple case a node <arr> is exorbitant.
+ * #007 Check for loaded config files and only overwrite if it is valid.
+ * 
+ */
 define('SITE_PATH', realpath(dirname(__FILE__)));
 
 require_once(SITE_PATH."/src/application.php");
@@ -9,6 +37,7 @@ require_once(SITE_PATH."/src/surface.php");
 require_once(SITE_PATH."/src/operator.php");
 require_once(SITE_PATH."/src/adapter.php");
 require_once(SITE_PATH."/src/xsltDocument.php");
+require_once(SITE_PATH."/src/phtmlDocument.php");
 
 abstract class Castor {
 	private $domDocumentObj;
