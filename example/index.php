@@ -15,7 +15,7 @@ $document->loadPage();
 // $page = new Page('home');
 // $page->addFile('controller/indexController.php');
 // $page->setElement('myelement', array('element' => 'Hello World'));
-// $page->addAction('index', 'controller/indexController', 'indexAction');
+// $page->addAction('index', 'controller/indexController.php', 'indexAction');
 // $page->loadPage('home', 'index');
 
 // thx and good luck
