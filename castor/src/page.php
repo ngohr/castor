@@ -24,8 +24,9 @@
 require_once('action.php');
 
 class Page {
-	private $name = false;
-	private $index = false;
+	private $name;
+	private $index;
+
 	private $title = false;
 	private $returnTyp = false;
 
@@ -41,8 +42,9 @@ class Page {
 	private $classname = false;
 	private $method = false;
 
-	public function __construct($page) {
+	public function __construct($page, $index) {
 		$this->setName($page);
+		$this->setIndex($index);
 	}
 
 	public function setName($value) {
@@ -70,21 +72,21 @@ class Page {
 		return $this->constants;
 	}
 
-	public function addFile($file) {
-		if($file) {
-			if(!file_exists($file))
-				throw new Exception('File: "'.$file.'" not exists!');
-			else
-				$this->arrFile[] = $file;
+	public function addFile($file, $action = false) {
+		if($action) {
+			$this->arrAction[$action]->setFile($file);
 		} else {
-			return false;
+			if($file) {
+				if(!file_exists($file))
+					throw new Exception('File: "'.$file.'" not exists!');
+				else
+					$this->arrFile[] = $file;
+			} else {
+				return false;
+			}
 		}
 
 		return true;
-	}
-
-	public function addLocalFile($file, $action) {
-		$this->arrAction[$action]->setFile($file);
 	}
 
 	public function addAction($name, $classname = false, $method = flase) {
@@ -170,6 +172,14 @@ class Page {
 		return false;
 	}
 
+	public function getLocals($action) {
+		if($this->actionExists($action)) {
+			return $this->arrAction[$action]->getLocals();
+		}
+
+		return false;
+	}
+
 	public function setLocalConstant($action, $name, $value) {
 		$this->arrAction[$action]->setConstant($name, $value);
 	}
@@ -206,7 +216,6 @@ class Page {
 
 	public function setLocalNodes($action, $arr) {
 		if($this->actionExists($action)) {
-
 			$this->arrAction[$action]->setNodes($arr);
 		} else {
 			return false;
@@ -334,13 +343,6 @@ class Page {
 				}
 			}
 
-			if(count($this->locals[$action]) > 0) {
-				foreach($this->locals[$action] as $name => $value) {
-					$objAction->setElement($name, $value);
-				}
-			}
-			
-
 			$objAction->setPagename($this->getName());
 
 			if($this->getSitemap())
@@ -350,14 +352,6 @@ class Page {
 		}
 
 		return $arr;
-	}
-
-	public function localCacheApplied($action) {
-		return $this->arrAction[$action]->cacheApplied();
-	}
-
-	public function getLocalMimeType($action) {
-		return $this->arrAction[$action]->getMimeType();
 	}
 
 	// Load a defined Action, setElements, setPagename and returns $objAction->run()
@@ -370,19 +364,12 @@ class Page {
 				$objAction->setElement($name, $value);
 			}
 		}
-		if(count($this->locals[$action]) > 0) {
-			foreach($this->locals[$action] as $name => $value) {
-				$objAction->setElement($name, $value);
-			}
-		}
 
 		$objAction->setPagename($this->getName());
 
-		$objAction->setSitemap($this->getSitemap());
+		if($this->getSitemap())
+			$objAction->setSitemap($this->getSitemap());
 
-		if(method_exists($objAction, 'run'))
-			return $objAction->run();
-		else
-			return false;
+		return $objAction->run();
 	}
 }

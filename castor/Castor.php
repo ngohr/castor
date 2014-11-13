@@ -53,8 +53,11 @@ abstract class Castor {
 	public $rootfile;
 	public $rootpage;
 	public $rootaction;
+
+	// document / arr nodes
 	public $elements = array();
 
+	// document / arr nodes
 	private $surface = array();
 
 	abstract function createActions($pagename, $templateObj);
@@ -128,7 +131,7 @@ abstract class Castor {
 
 			unset($arr);
 		}
-		
+
 		// Load Surface´s for document Elements
 		$nodes = $nodeDocument->getElementsByTagName('surface');
 		if($nodes) {
@@ -364,7 +367,7 @@ abstract class Castor {
 		$objCustomizer->formatOutput = true;
 
 		if(!file_exists(SITE_PATH."/templates/document.xsl"))
-			throw new Exception ('System Template: document.xsl not exists!');
+			throw new Exception('System Template: document.xsl not exists!');
 		else
 			$objCustomizer->load(SITE_PATH."/templates/document.xsl");
 
@@ -415,6 +418,14 @@ abstract class Castor {
 	
 	public function getRootaction() {
 		return $this->rootaction;
+	}
+
+	public function pageExists($name) {
+		if(array_key_exists($name, $this->sitemap)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public function loadModules() {

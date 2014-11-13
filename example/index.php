@@ -12,7 +12,7 @@ $document->loadPage();
 // $document->loadPage();
 
 // Alternative
-// $page = new Page('home');
+// $page = new Page('home', 'index');
 // $page->addFile('controller/indexController.php');
 // $page->setElement('myelement', array('element' => 'Hello World'));
 // $page->addAction('index', 'controller/indexController.php', 'indexAction');

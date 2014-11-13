@@ -26,29 +26,20 @@
 require_once(SITE_PATH."/src/Document.php");
 
 class xsltDocument extends Document {
-	// PHP DOMDocument / implements an xml root node and will filled after loadPage or run
+	// PHP DOMDocument / implements an xml root node that will filled after loadPage() or run()
 	private $domDocumentObj = false;
 	private $root;
-
-	// If a page exists in array $this->arrPage, return true
-	public function pageExists($name) {
-		if(!array_key_exists($name, $this->sitemap))
-			return false;
-	
-		return true;
-	}
 
 	private function expandNodes($objPage, $action) {
 		// Expand Nodes for Page
 		$expand = $objPage->getNodes();
-
 		if($expand && count($expand) > 0) {
 			foreach($expand as $index => $value) {
 				if(is_array($value)) {
 					foreach($value as $subIndex => $subValue) {
 						$node = $this->domDocumentObj->createElement($index);
 						elements::createElementRepresentation($subValue, $this->domDocumentObj, $node);
-	
+
 						$this->root->appendChild($node);
 					}
 				} else {
@@ -81,6 +72,24 @@ class xsltDocument extends Document {
 		}
 	}
 
+	public function expandNode($index, $value) {
+		// Create DomDocument Object
+		if(!$this->domDocumentObj) {
+			$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+			$this->domDocumentObj->preserveWhiteSpace = true;
+			$this->domDocumentObj->formatOutput = true;
+
+			// Create Document Rootnode <root>
+			// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
+			$this->root = $this->domDocumentObj->createElement('root');
+		}
+
+		$element = $this->domDocumentObj->createElement($index);
+		$txt = $this->domDocumentObj->createTextNode($value);
+		$element->appendChild($txt);
+		$this->root->appendChild($element);
+	}
+
 	public function loadPage($page = false, $action = false) {
 		$objPage = false;
 
@@ -94,7 +103,7 @@ class xsltDocument extends Document {
 			// Relates @todo #001: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
 			$this->root = $this->domDocumentObj->createElement('root');
 		}
-	
+
 		if($page) {
 			if(!$this->pageExists($page))
 				throw new Exception('Page: "'.$page.'" is not defined...');
@@ -128,7 +137,6 @@ class xsltDocument extends Document {
 
 		// Set Page Array for Sitemap Call
 		$objPage->setSitemap($this->sitemap);
-
 		$objPage->loadFiles($action);
 		$returnType = $objPage->getReturnTyp($action);
 		if(!$returnType)
@@ -144,13 +152,13 @@ class xsltDocument extends Document {
 						$node = $this->domDocumentObj->importNode($sibling, true);
 						$this->root->appendChild($node);
 					}
-						
+
 					$expand = $objPage->getLocalNodes($action);
 					$this->expandNodes($objPage, $action);
 				}
-	
+
 				break;
-	
+
 			case 'Array':
 				// Contruct DomDocument Elements from a given array, returned from $objPage->call($action);
 				$returnvalue = $objPage->call($action);
@@ -160,9 +168,9 @@ class xsltDocument extends Document {
 	
 					$this->expandNodes($objPage, $action);
 				}
-	
+
 				break;
-	
+
 			case 'text/html':
 				// Print Plain Text from $objPage->load();
 				ob_start();
@@ -173,7 +181,7 @@ class xsltDocument extends Document {
 				} else {
 					echo $objPage->call($action);
 				}
-	
+
 				return true;
 
 				ob_flush();
@@ -305,23 +313,5 @@ class xsltDocument extends Document {
 		echo $output->saveHTML();
 	
 		return true;
-	}
-
-	public function expandNode($index, $value) {
-		// Create DomDocument Object
-		if(!$this->domDocumentObj) {
-			$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
-			$this->domDocumentObj->preserveWhiteSpace = true;
-			$this->domDocumentObj->formatOutput = true;
-		
-			// Create Document Rootnode <root>
-			// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
-			$this->root = $this->domDocumentObj->createElement('root');
-		}
-
-		$element = $this->domDocumentObj->createElement($index);
-		$txt = $this->domDocumentObj->createTextNode($value);
-		$element->appendChild($txt);
-		$this->root->appendChild($element);
 	}
 }

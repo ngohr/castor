@@ -173,7 +173,7 @@ class Application {
 				}
 			}
 			$arrSitemap['page'][$i] = $arr;
-			
+
 			if($computeActions) {
 				$arrSitemap['page'][$i]['action'] = array();
 				$arrActions = $obj->getActions();
