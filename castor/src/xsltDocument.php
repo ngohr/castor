@@ -6,7 +6,7 @@
  *
  * - Objects of type Array or DomDocument will rendered as a xslt output or prepared for a client rendering with xsl include
  * - Expand nodes form config expand/add nodes
- * - $this->root extends $this->domDocumentObj with a root element and includes the main values from controller classes
+ * - $this->root extends $this->domDocumentPage with a root element and includes the main values from controller classes
  * 
  * @todos
  * 
@@ -27,7 +27,7 @@ require_once(SITE_PATH."/src/Document.php");
 
 class xsltDocument extends Document {
 	// PHP DOMDocument / implements an xml root node that will filled after loadPage() or run()
-	private $domDocumentObj = false;
+	private $domDocumentPage = false;
 	private $root;
 
 	private function expandNodes($objPage, $action) {
@@ -37,14 +37,14 @@ class xsltDocument extends Document {
 			foreach($expand as $index => $value) {
 				if(is_array($value)) {
 					foreach($value as $subIndex => $subValue) {
-						$node = $this->domDocumentObj->createElement($index);
-						elements::createElementRepresentation($subValue, $this->domDocumentObj, $node);
+						$node = $this->domDocumentPage->createElement($index);
+						elements::createElementRepresentation($subValue, $this->domDocumentPage, $node);
 
 						$this->root->appendChild($node);
 					}
 				} else {
-					$node = $this->domDocumentObj->createElement($index);
-					$txt = $this->domDocumentObj->createTextNode($value);
+					$node = $this->domDocumentPage->createElement($index);
+					$txt = $this->domDocumentPage->createTextNode($value);
 					$node->appendChild($txt);
 					$this->root->appendChild($node);
 				}
@@ -57,14 +57,14 @@ class xsltDocument extends Document {
 			foreach($expand as $index => $value) {
 				if(is_array($value)) {
 					foreach($value as $subIndex => $subValue) {
-						$node = $this->domDocumentObj->createElement($index);
-						elements::createElementRepresentation($subValue, $this->domDocumentObj, $node);
+						$node = $this->domDocumentPage->createElement($index);
+						elements::createElementRepresentation($subValue, $this->domDocumentPage, $node);
 
 						$this->root->appendChild($node);
 					}
 				} else {
-					$node = $this->domDocumentObj->createElement($index);
-					$txt = $this->domDocumentObj->createTextNode($value);
+					$node = $this->domDocumentPage->createElement($index);
+					$txt = $this->domDocumentPage->createTextNode($value);
 					$node->appendChild($txt);
 					$this->root->appendChild($node);
 				}
@@ -74,18 +74,18 @@ class xsltDocument extends Document {
 
 	public function expandNode($index, $value) {
 		// Create DomDocument Object
-		if(!$this->domDocumentObj) {
-			$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
-			$this->domDocumentObj->preserveWhiteSpace = true;
-			$this->domDocumentObj->formatOutput = true;
+		if(!$this->domDocumentPage) {
+			$this->domDocumentPage = new DOMDocument('1.0', 'UTF-8');
+			$this->domDocumentPage->preserveWhiteSpace = true;
+			$this->domDocumentPage->formatOutput = true;
 
 			// Create Document Rootnode <root>
 			// Relates to #007: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
-			$this->root = $this->domDocumentObj->createElement('root');
+			$this->root = $this->domDocumentPage->createElement('root');
 		}
 
-		$element = $this->domDocumentObj->createElement($index);
-		$txt = $this->domDocumentObj->createTextNode($value);
+		$element = $this->domDocumentPage->createElement($index);
+		$txt = $this->domDocumentPage->createTextNode($value);
 		$element->appendChild($txt);
 		$this->root->appendChild($element);
 	}
@@ -94,14 +94,14 @@ class xsltDocument extends Document {
 		$objPage = false;
 
 		// Create DomDocument Object
-		if(!$this->domDocumentObj) {
-			$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
-			$this->domDocumentObj->preserveWhiteSpace = true;
-			$this->domDocumentObj->formatOutput = true;
+		if(!$this->domDocumentPage) {
+			$this->domDocumentPage = new DOMDocument('1.0', 'UTF-8');
+			$this->domDocumentPage->preserveWhiteSpace = true;
+			$this->domDocumentPage->formatOutput = true;
 				
 			// Create Document Rootnode <root>
 			// Relates @todo #001: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
-			$this->root = $this->domDocumentObj->createElement('root');
+			$this->root = $this->domDocumentPage->createElement('root');
 		}
 
 		if($page) {
@@ -149,7 +149,7 @@ class xsltDocument extends Document {
 				$returnvalue = $objPage->call($action);
 				if($returnvalue) {
 					foreach($returnvalue->childNodes as $sibling) {
-						$node = $this->domDocumentObj->importNode($sibling, true);
+						$node = $this->domDocumentPage->importNode($sibling, true);
 						$this->root->appendChild($node);
 					}
 
@@ -164,7 +164,7 @@ class xsltDocument extends Document {
 				$returnvalue = $objPage->call($action);
 	
 				if($returnvalue && is_array($returnvalue)) {
-					elements::createElementRepresentation($returnvalue, $this->domDocumentObj, $this->root);
+					elements::createElementRepresentation($returnvalue, $this->domDocumentPage, $this->root);
 	
 					$this->expandNodes($objPage, $action);
 				}
@@ -210,24 +210,24 @@ class xsltDocument extends Document {
 				$stylesheet = $objPage->getStylesheet($action);
 	
 				if(!empty($stylesheet)) {
-					$xslt = $this->domDocumentObj->createProcessingInstruction(
+					$xslt = $this->domDocumentPage->createProcessingInstruction(
 							'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
 					);
 						
-					$this->domDocumentObj->appendChild($xslt);
-					$this->domDocumentObj->appendChild($this->root);
+					$this->domDocumentPage->appendChild($xslt);
+					$this->domDocumentPage->appendChild($this->root);
 				} else {
 					return false;
 				}
 	
-				$this->domDocumentObj->appendChild($this->root);
+				$this->domDocumentPage->appendChild($this->root);
 	
 				$this->sendXml();
 	
 				break;
 	
 			case 'server':
-				$this->domDocumentObj->appendChild($this->root);
+				$this->domDocumentPage->appendChild($this->root);
 				$stylesheet = $objPage->getStylesheet($action);
 
 				$this->sendHTML($stylesheet);
@@ -235,7 +235,7 @@ class xsltDocument extends Document {
 				break;
 	
 			case 'html5':
-				$this->domDocumentObj->appendChild($this->root);
+				$this->domDocumentPage->appendChild($this->root);
 				$stylesheet = $objPage->getStylesheet($action);
 					
 				$this->sendHTML5($stylesheet);
@@ -246,8 +246,8 @@ class xsltDocument extends Document {
 			case 'xml':
 				header('Content-type: text/xml; charset=UTF-8');
 	
-				$this->domDocumentObj->appendChild($this->root);
-				$this->domDocumentObj->save('php://output');
+				$this->domDocumentPage->appendChild($this->root);
+				$this->domDocumentPage->save('php://output');
 	
 				break;
 					
@@ -255,17 +255,17 @@ class xsltDocument extends Document {
 				$stylesheet = $objPage->getStylesheet($action);
 	
 				if(!empty($stylesheet)) {
-					$xslt = $this->domDocumentObj->createProcessingInstruction(
+					$xslt = $this->domDocumentPage->createProcessingInstruction(
 							'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
 					);
 	
-					$this->domDocumentObj->appendChild($xslt);
-					$this->domDocumentObj->appendChild($this->root);
+					$this->domDocumentPage->appendChild($xslt);
+					$this->domDocumentPage->appendChild($this->root);
 				} else {
 					return false;
 				}
 	
-				$this->domDocumentObj->appendChild($this->root);
+				$this->domDocumentPage->appendChild($this->root);
 	
 				$this->sendXml();
 	
@@ -288,7 +288,7 @@ class xsltDocument extends Document {
 			header('Content-type: text/xml; charset=UTF-8');
 		}
 	
-		$this->domDocumentObj->save('php://output');
+		$this->domDocumentPage->save('php://output');
 	
 		return true;
 	}
@@ -307,7 +307,7 @@ class xsltDocument extends Document {
 		$xpr = new XsltProcessor();
 		$xpr->importStylesheet($xsl);
 	
-		$output = $xpr->transformToDoc($this->domDocumentObj);
+		$output = $xpr->transformToDoc($this->domDocumentPage);
 	
 		header('Content-Type: text/html; charset=UTF-8');
 		echo $output->saveHTML();

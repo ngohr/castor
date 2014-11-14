@@ -5,10 +5,10 @@
  * The Castor main class
  * 
  * - Documents wouldt extend Castor to construct the given sitemap
- * - The given sitemap from config files will be deconstructed with a xsl-template and elements wouldt be extracted
- * - The prepared xml will given to childs and a method named createActions
+ * - The given sitemap from config files will be deconstructed
+ * - The filtered node will given to childs and a method named createActions
  * - $this->sitemap contains an array with Page and Action objects prepared by Document classes
- * - Tags from config/document will extracted here and only the sitemap tag will prepared for document classes
+ * - Tags from config/document will extracted here and only the sitemap/page tags will prepared for document classes
  * - Also Castor modules will prepared here and loaded with $this->loadModules();
  * - Elements in document or module nodes will prepared here and given to the sitemap before Document calls loadPage()
  * 
@@ -40,7 +40,7 @@ require_once(SITE_PATH."/src/xsltDocument.php");
 require_once(SITE_PATH."/src/phtmlDocument.php");
 
 abstract class Castor {
-	private $domDocumentObj;
+	public $domDocumentObj;
 
 	public $document;
 	public $sitemap = array();
@@ -70,314 +70,314 @@ abstract class Castor {
 
 		$this->domDocumentObj->load($file);
 
-		$nodeConfig = $this->domDocumentObj->getElementsByTagName('config')->item(0);
-		if(!$nodeConfig)
-			throw new Exception('Read Config: Root Node config not exists!');
-
-		$nodeDocument = $nodeConfig->getElementsByTagName('document')->item(0);
-		if(!$nodeDocument)
+		$xpath = new DOMXpath($this->domDocumentObj);
+		$nodeDocument = $xpath->query("document");
+		if($nodeDocument->length > 1) {
+			throw new Exception("Read Config: Node document is not inimitable!");
+		} elseif(!$nodeDocument || $nodeDocument->length <= 0) {
 			throw new Exception('Read Config: Node config/document not exists!');
+		}
+		$elementDocument = $nodeDocument->item(0);
 
 		// Document Root Path /config/document/path
-		$nodePath = $nodeDocument->getElementsByTagName('path')->item(0);
-		if($nodePath)
-			$this->setRootpath($nodePath->nodeValue);
+		$nodePath = $xpath->query("path", $elementDocument);
+		if($nodePath->length > 1) {
+			throw new Exception("Read Config: document/path is not inimitable!");
+		}
+		$elementPath = $nodePath->item(0);
+		if($elementPath && $elementPath->nodeValue != '')
+			$this->setRootpath($elementPath->nodeValue);
 
 		// Document Root File /config/document/file
-		$nodeFile = $nodeDocument->getElementsByTagName('file')->item(0);
-		if($nodeFile)
-			$this->setRootfile($nodeFile->nodeValue);
+		$nodeFile = $xpath->query("file", $elementDocument);
+		if($nodeFile->length > 1) {
+			throw new Exception("Read Config: document/file is not inimitable!");
+		}
+		$elementFile = $nodeFile->item(0);
+		if($elementFile && $elementFile->nodeValue != '')
+			$this->setRootfile($elementFile->nodeValue);
 
 		// Document Root Page /config/document/root
-		$nodeRootPage = $nodeDocument->getElementsByTagName('root')->item(0);
-		if($nodeRootPage) {
-			$this->setRootpage($nodeRootPage->nodeValue);
+		$nodeRoot = $xpath->query("root", $elementDocument);
+		if($nodeRoot->length > 1) {
+			throw new Exception("Read Config: document/root is not inimitable!");
+		}
+		$elementRoot = $nodeRoot->item(0);
+		if($elementRoot && $elementRoot->nodeValue != '') {
+			$this->setRootpage($elementRoot->nodeValue);
 
-			// Document Root Index /config/document/root::index
-			$attributeAction = $nodeRootPage->getAttribute('action');
+			// Document Root Index /config/document/root[@index != '']
+			$attributeAction = $elementRoot->getAttribute('action');
 			if($attributeAction)
 				$this->setRootaction($attributeAction);
-		} else {
-			throw new Exception('Read Config: Node config/document/root not exists!');
 		}
 
 		// Global Elements - Load Arrays defined in /config/document/arr::name
-		$arrNodes = $nodeDocument->getElementsByTagName('arr');
-		for($i = 0; $i < $arrNodes->length; $i++) {
-			$arr = array();
-
-			$item = $arrNodes->item($i);
-			if($item->parentNode->nodeName == 'document') {
-				$arrname = $item->getAttribute('name');
-				$variables = $item->getElementsByTagName('var');
-				for($f = 0; $f < $variables->length; $f++) {
-					$var = $variables->item($f);
-					$name = $var->getAttribute('name');
-					$value = $var->nodeValue;
-
-					$arr[$name] = $value;
-				}
-			}
-
-			if(count($arr) > 0) {
-				if(array_key_exists($arrname, $this->elements) && $this->elements[$arrname]) {
-					foreach($arr as $index => $value) {
-						$this->elements[$arrname][$index] = $value;
+		$arrNodes = $xpath->query("arr", $elementDocument);
+		if($arrNodes) {
+			for($i = 0; $i < $arrNodes->length; $i++) {
+				$arr = array();
+	
+				$item = $arrNodes->item($i);
+				if($item) {
+					$arrname = $item->getAttribute('name');
+					$variables = $xpath->query("var", $item);
+					for($f = 0; $f < $variables->length; $f++) {
+						$var = $variables->item($f);
+						if($var) {
+							$name = $var->getAttribute('name');
+							if($name && $name != '') {
+								$value = $var->nodeValue;
+				
+								$arr[$name] = $value;
+							}
+	
+							unset($name);
+						}
 					}
-				} else {
-					$this->elements[$arrname] = $arr;
+	
+					if(count($arr) > 0) {
+						$this->elements[$arrname] = $arr;
+					}
 				}
+	
+				unset($arrname);
+				unset($arr);
 			}
-
-			unset($arr);
 		}
 
 		// Load Surface´s for document Elements
-		$nodes = $nodeDocument->getElementsByTagName('surface');
-		if($nodes) {
-			for($i = 0; $i < $nodes->length; $i++) {
-				$surfacenode = $nodes->item($i);
-		
-				if($surfacenode->parentNode->nodeName == 'document') {
-					$surfaceName = $surfacenode->getAttribute('name');
-					if(!$surfaceName)
-						throw new Exception('Missing name for Surface!');
-		
-					$this->surface[$surfaceName] = array();
-		
-					$filesNode = $surfacenode->getElementsByTagName('file');
-					if(!$filesNode)
-						throw new Exception('Missing file for Surface '.$name.'!');
-		
-					if($filesNode->item(0)) {
-						if(!file_exists($filesNode->item(0)->nodeValue)) {
-							throw new Exception('File '.$filesNode->item(0)->nodeValue.' not exists!');
-						}
-						$file = $filesNode->item(0)->nodeValue;
-		
-						$this->surface[$surfaceName]['file'] = $file;
-		
-						$classNode = $surfacenode->getElementsByTagName('class');
-						$classname = $classNode->item(0)->nodeValue;
-		
-						$this->surface[$surfaceName]['class'] = $classname;
+		$surfaceNodes = $xpath->query("surface", $elementDocument);
+		if($surfaceNodes && $surfaceNodes->length > 0) {
+			for($i = 0; $i < $surfaceNodes->length; $i++) {
+				$node = $surfaceNodes->item($i);
+				$surfaceName = $node->getAttribute('name');
+				if(!$surfaceName || $surfaceName == '')
+					throw new Exception('Missing name for Surface!');
+
+				$this->surface[$surfaceName] = array();
+
+				$filesNode = $xpath->query("file", $node);
+				if(!$filesNode || $filesNode->length <= 0) {
+					throw new Exception('Missing file for Surface '.$surfaceName.'!');
+				}
+
+				$fileElement = $filesNode->item(0);
+				if($fileElement->nodeValue != '') {
+					if(!file_exists($fileElement->nodeValue)) {
+						throw new Exception('File '.$fileElement->nodeValue.' not exists!');
 					}
-		
-					// Load Arrays for surface nodes...
+
+					$this->surface[$surfaceName]['file'] = $fileElement->nodeValue;
+				} else {
+					throw new Exception('Missing file for Surface!');
+				}
+
+				$classNode = $xpath->query("class", $node);
+				if(!$classNode || $classNode->length <= 0) {
+					throw new Exception('Missing class for Surface '.$surfaceName.'!');
+				} else {
+					$class = $classNode->item(0)->nodeValue;
+					$this->surface[$surfaceName]['class'] = $class;
+				}
+
+				// Load Arrays for surface nodes...
+				$arrNodes = $xpath->query("arr", $node);
+				if($arrNodes && $arrNodes->length > 0) {
 					$this->surface[$surfaceName]['elements'] = array();
-					$arrNodes = $surfacenode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
 		
 						$item = $arrNodes->item($e);
-						if($item->parentNode->nodeName == 'surface') {
-							$arrname = $item->getAttribute('name');
-							$varNodes = $item->getElementsByTagName('var');
+						$arrname = $item->getAttribute('name');
+						$varNodes = $xpath->query("var", $item);
+						if($varNodes && $varNodes->length > 0) {
 							for($f = 0; $f < $varNodes->length; $f++) {
 								$var = $varNodes->item($f);
 								$name = $var->getAttribute('name');
 								$value = $var->nodeValue;
-		
+
 								$arr[$name] = $value;
 							}
-							$this->surface[$surfaceName]['elements'][$arrname] = $arr;
-								
-							unset($arr);
 						}
+						$this->surface[$surfaceName]['elements'][$arrname] = $arr;
+							
+						unset($arr);
 					}
 				}
 			}
 		}
 
 		// Load Operator´s for document Elements
-		$nodes = $nodeDocument->getElementsByTagName('operator');
-		if($nodes) {
-			for($i = 0; $i < $nodes->length; $i++) {
-				$operatornode = $nodes->item($i);
+		$operatorNodes = $xpath->query("operator", $elementDocument);
+		if($operatorNodes && $operatorNodes->length > 0) {
+			for($i = 0; $i < $operatorNodes->length; $i++) {
+				$node = $operatorNodes->item($i);
+				$operatorName = $node->getAttribute('name');
+				if(!$operatorName || $operatorName == '')
+					throw new Exception('Missing name for Operator!');
 		
-				if($operatornode->parentNode->nodeName == 'document') {
-					$operatorName = $operatornode->getAttribute('name');
-					if(!$operatorName)
-						throw new Exception('Missing name for Operator Module!');
-						
-					$this->operator[$operatorName] = array();
+				$this->operator[$operatorName] = array();
 		
-					$filesNode = $operatornode->getElementsByTagName('file');
-					if(!$filesNode)
-						throw new Exception('Missing file for Operator Module '.$operatorName.'!');
+				$filesNode = $xpath->query("file", $node);
+				if(!$filesNode || $filesNode->length <= 0) {
+					throw new Exception('Missing file for Operator '.$operatorName.'!');
+				}
 		
-					if($filesNode->item(0)) {
-						if(!file_exists($filesNode->item(0)->nodeValue)) {
-							throw new Exception('File '.$filesNode->item(0)->nodeValue.' not exists!');
-						}
-						$file = $filesNode->item(0)->nodeValue;
-
-						$this->operator[$operatorName]['file'] = $file;
-		
-						$classNode = $operatornode->getElementsByTagName('class');
-						$this->operator[$operatorName]['class'] = $classNode->item(0)->nodeValue;
+				$fileElement = $filesNode->item(0);
+				if($fileElement->nodeValue != '') {
+					if(!file_exists($fileElement->nodeValue)) {
+						throw new Exception('File '.$fileElement->nodeValue.' not exists!');
 					}
 		
-					// Load Arrays for operator nodes...
+					$this->operator[$operatorName]['file'] = $fileElement->nodeValue;
+				} else {
+					throw new Exception('Missing file for Operator!');
+				}
+
+				$classNode = $xpath->query("class", $node);
+				if(!$classNode || $classNode->length <= 0) {
+					throw new Exception('Missing class for Surface '.$operatorName.'!');
+				} else {
+					$class = $classNode->item(0)->nodeValue;
+					$this->operator[$operatorName]['class'] = $class;
+				}
+
+				// Load Arrays for operator nodes...
+				$arrNodes = $xpath->query("arr", $node);
+				if($arrNodes && $arrNodes->length > 0) {
 					$this->operator[$operatorName]['elements'] = array();
-					$arrNodes = $operatornode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
 		
 						$item = $arrNodes->item($e);
-
-						if($item->parentNode->nodeName == 'operator') {
-							$arrname = $item->getAttribute('name');
-							$varNodes = $item->getElementsByTagName('var');
+						$arrname = $item->getAttribute('name');
+						$varNodes = $xpath->query("var", $item);
+						if($varNodes && $varNodes->length > 0) {
 							for($f = 0; $f < $varNodes->length; $f++) {
 								$var = $varNodes->item($f);
 								$name = $var->getAttribute('name');
 								$value = $var->nodeValue;
-									
+		
 								$arr[$name] = $value;
 							}
-							$this->operator[$operatorName]['elements'][$arrname] = $arr;
-								
-							unset($arr);
 						}
+						$this->operator[$operatorName]['elements'][$arrname] = $arr;
+							
+						unset($arr);
 					}
 				}
 			}
 		}
-		
+
 		// Load Adapter´s for document Elements
-		$nodes = $nodeDocument->getElementsByTagName('adapter');
-		if($nodes) {
-			for($i = 0; $i < $nodes->length; $i++) {
-				$adapternode = $nodes->item($i);
+		$adapterNodes = $xpath->query("adapter", $elementDocument);
+		if($adapterNodes && $adapterNodes->length > 0) {
+			for($i = 0; $i < $adapterNodes->length; $i++) {
+				$node = $adapterNodes->item($i);
+				$adapterName = $node->getAttribute('name');
+				if(!$adapterName || $adapterName == '')
+					throw new Exception('Missing name for Adapter!');
 		
-				if($adapternode->parentNode->nodeName == 'document') {
-					$adapterName = $adapternode->getAttribute('name');
-					if(!$adapterName)
-						throw new Exception('Missing name for Adapter Module!');
-						
-					$this->adapter[$adapterName] = array();
+				$this->adapter[$adapterName] = array();
 		
-					$filesNode = $adapternode->getElementsByTagName('file');
-					if(!$filesNode)
-						throw new Exception('Missing file for Adapter Module '.$adapterName.'!');
+				$filesNode = $xpath->query("file", $node);
+				if(!$filesNode || $filesNode->length <= 0) {
+					throw new Exception('Missing file for Adapter '.$adapterName.'!');
+				}
 		
-					if($filesNode->item(0)) {
-						if(!file_exists($filesNode->item(0)->nodeValue)) {
-							throw new Exception('File '.$files->item(0)->nodeValue.' not exists!');
-						}
-						$file = $filesNode->item(0)->nodeValue;
-
-						$this->adapter[$adapterName]['file'] = $file;
-
-						$classNode = $adapternode->getElementsByTagName('class');
-						$classname = $classNode->item(0)->nodeValue;
-						$this->adapter[$adapterName]['class'] = $classname;
+				$fileElement = $filesNode->item(0);
+				if($fileElement->nodeValue != '') {
+					if(!file_exists($fileElement->nodeValue)) {
+						throw new Exception('File '.$fileElement->nodeValue.' not exists!');
 					}
+		
+					$this->adapter[$adapterName]['file'] = $fileElement->nodeValue;
+				} else {
+					throw new Exception('Missing file for Adapter!');
+				}
 
-					// Load Arrays for operator nodes...
+				$classNode = $xpath->query("class", $node);
+				if(!$classNode || $classNode->length <= 0) {
+					throw new Exception('Missing class for Surface '.$adapterName.'!');
+				} else {
+					$class = $classNode->item(0)->nodeValue;
+					$this->adapter[$adapterName]['class'] = $class;
+				}
+
+				// Load Arrays for adapter nodes...
+				$arrNodes = $xpath->query("arr", $node);
+				if($arrNodes && $arrNodes->length > 0) {
 					$this->adapter[$adapterName]['elements'] = array();
-					$arrNodes = $adapternode->getElementsByTagName('arr');
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
-
+		
 						$item = $arrNodes->item($e);
-
-						if($item->parentNode->nodeName == 'adapter') {
-							$arrname = $item->getAttribute('name');
-							$varNodes = $item->getElementsByTagName('var');
+						$arrname = $item->getAttribute('name');
+						$varNodes = $xpath->query("var", $item);
+						if($varNodes && $varNodes->length > 0) {
 							for($f = 0; $f < $varNodes->length; $f++) {
 								$var = $varNodes->item($f);
 								$name = $var->getAttribute('name');
 								$value = $var->nodeValue;
-
+		
 								$arr[$name] = $value;
 							}
-							$this->adapter[$adapterName]['elements'][$arrname] = $arr;
-		
-							unset($arr);
 						}
+						$this->adapter[$adapterName]['elements'][$arrname] = $arr;
+							
+						unset($arr);
 					}
 				}
 			}
 		}
 
-		// Load Sitemap /config/sitemap/page
-		$this->sitemapNode = $nodeConfig->getElementsByTagName('sitemap');
-		if($this->sitemapNode) {
-			$nodes = $this->sitemapNode->item(0)->getElementsByTagName('page');
-			for($i = 0; $i < $nodes->length; $i++) {
-				$pagenode = $nodes->item($i);
-				$page = $pagenode->getAttribute('name');
+		$this->sitemapNode = $xpath->query("sitemap");
+		if($this->sitemapNode->length > 1) {
+			throw new Exception("Read Config: Node sitemap is not inimitable!");
+		} elseif(!$this->sitemapNode || $this->sitemapNode->length <= 0) {
+			throw new Exception('Read Config: Node config/sitemap not exists!');
+		}
+		$elementSitemap = $this->sitemapNode->item(0);
 
+		$pageNodes = $xpath->query("page", $elementSitemap);
+		for($i = 0; $i < $pageNodes->length; $i++) {
+			$pagenode = $pageNodes->item($i);
+			$page = $pagenode->getAttribute('name');
+			if($page && $page != '') {
 				if($pagename && $actionname) {
 					if($page == $pagename) {
-						$this->load($page, $actionname);
+						if(!$this->createActions($page, $pagenode, $actionname)) {
+							throw new Exception("createActions(".$page.", DomElement); failed...");
+						}
 					} else {
-						if(!$notCreate)
-							$this->createPage($page, $pagenode);
+						if(!$notCreate) {
+							if(!$this->createPage($page, $pagenode)) {
+								throw new Exception("createActions(".$page.", DomElement); failed...");
+							}
+						}
 					}
 				} elseif($pagename && !$actionname) {
 					if($page == $pagename) {
-						$this->load($page);
+						if(!$this->createActions($page, $pagenode)) {
+							throw new Exception("createActions(".$page.", DomElement); failed...");
+						}
 					} else {
-						if(!$notCreate)
-							$this->createPage($page, $pagenode);
+						if(!$notCreate) {
+							if(!$this->createPage($page, $pagenode)) {
+								throw new Exception("createActions(".$page.", DomElement); failed...");
+							}
+						}
 					}
 				} else {
-					$this->load($page);
+					if(!$this->createActions($page, $pagenode)) {
+						throw new Exception("createActions(".$page.", DomElement); failed...");
+					}
 				}
 			}
 		}
 
 		$this->loadModules();
-	}
-
-	public function load($pagename, $actionname = false) {
-		// Create DomDocument Object
-		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
-		$domDocumentObj->preserveWhiteSpace = true;
-		$domDocumentObj->formatOutput = true;
-
-		$rootNode = $domDocumentObj->createElement('root');
-
-		$castorNode = $domDocumentObj->createElement('castor');
-
-		$pageNode = $domDocumentObj->createElement('pagename');
-		$txt = $domDocumentObj->createTextNode($pagename);
-		$pageNode->appendChild($txt);
-		$castorNode->appendChild($pageNode);
-
-		if($actionname) {
-			$actionNode = $domDocumentObj->createElement('actionname');
-			$txt = $domDocumentObj->createTextNode($actionname);
-			$actionNode->appendChild($txt);
-			$castorNode->appendChild($actionNode);
-		}
-
-		$rootNode->appendChild($castorNode);
-		if($this->sitemapNode->item(0)) {
-			$node = $domDocumentObj->importNode($this->sitemapNode->item(0), true);
-			$rootNode->appendChild($node);
-		}
-		$domDocumentObj->appendChild($rootNode);
-
-		$objCustomizer = new DomDocument();
-		$objCustomizer->preserveWhiteSpace = true;
-		$objCustomizer->formatOutput = true;
-
-		if(!file_exists(SITE_PATH."/templates/document.xsl"))
-			throw new Exception('System Template: document.xsl not exists!');
-		else
-			$objCustomizer->load(SITE_PATH."/templates/document.xsl");
-
-		$xpr = new XsltProcessor();
-		$xpr->importStylesheet($objCustomizer);
-
-		$template = $xpr->transformToDoc($domDocumentObj);
-		if(!$this->createActions($pagename, $template)) {
-			throw new Exception("createActions(".$pagename.", DomObject); failed...");
-		}
 	}
 
 	public function setRootpath($value) {

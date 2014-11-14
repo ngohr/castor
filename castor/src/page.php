@@ -94,7 +94,7 @@ class Page {
 			if(!$this->classname) {
 				throw new Exception("Couldt not add action without classname!");
 			} else {
-				$classname = $this->getRootClass();
+				$classname = $this->getClass();
 			}
 		}
 
@@ -102,7 +102,7 @@ class Page {
 			if(!$this->method) {
 				throw new Exception("Couldt not add action without methodname!");
 			} else {
-				$method = $this->getRootMethod();
+				$method = $this->getMethod();
 			}
 		}
 
@@ -184,26 +184,7 @@ class Page {
 		$this->arrAction[$action]->setConstant($name, $value);
 	}
 	
-	public function setRootClass($name) {
-		$this->classname = $name;
-		
-		return true;
-	}
-	
-	public function getRootClass() {
-		return $this->classname;
-	}
-	
-	public function setRootMethod($name) {
-		$this->method = $name;
-		
-		return true;
-	}
-	
-	public function getRootMethod() {
-		return $this->method;
-	}
-	
+
 	public function setNodes($arr) {
 		$this->expand = $arr;
 		
@@ -297,12 +278,33 @@ class Page {
 		return $this->sitemap;
 	}
 
-	public function setMethod($action, $method) {
-		return $this->arrAction[$action]->setMethod($method);
+	public function setMethod($name, $action = false) {
+		if($action)
+			return $this->arrAction[$action]->setMethod($name);
+		else
+			return $this->method = $name;
 	}
 
-	public function setClass($action, $classname) {
-		return $this->arrAction[$action]->setClass($classname);
+
+	public function getMethod($action = false) {
+		if($action)
+			return $this->arrAction[$action]->getMethod($classname);
+		else
+			return $this->method;
+	}
+
+	public function setClass($name, $action = false) {
+		if($action)
+			return $this->arrAction[$action]->setClass($name);
+		else
+			return $this->classname = $name;
+	}
+
+	public function getClass($action = false) {
+		if($action)
+			return $this->arrAction[$action]->setClass($classname);
+		else
+			return $this->classname;
 	}
 
 	public function addSurface($name, $obj) {

@@ -27,7 +27,7 @@ abstract class Document extends Castor {
 	public function pageExists($name) {
 		if(!array_key_exists($name, $this->sitemap))
 			return false;
-	
+
 		return true;
 	}
 
@@ -35,6 +35,8 @@ abstract class Document extends Castor {
 		if(array_key_exists($pagename, $this->sitemap)) {
 			return false;
 		}
+
+		$xpath = new DOMXpath($this->domDocumentObj);
 
 		$index = $pagenode->getAttribute('index');
 		if(!$index || $index == '') {
@@ -48,7 +50,7 @@ abstract class Document extends Castor {
 			$objPage->setReturnTyp($returnTyp);
 		}
 
-		$titleNode = $pagenode->getElementsByTagName('title');
+		$titleNode = $xpath->query("title", $pagenode);
 		if($titleNode) {
 			$title = $titleNode->item(0)->nodeValue;
 			if($title && $title != '')
@@ -58,8 +60,18 @@ abstract class Document extends Castor {
 		// Add Rootfile
 		$objPage->addFile($this->getRootpath()."/".$this->getRootfile());
 
+		$classNode = $xpath->query("class", $pagenode);
+		if($classNode && $classNode->length > 0 && $classNode->item(0)->nodeValue) {
+			$objPage->setClass($classNode->item(0)->nodeValue);
+		}
+		
+		$methodNode = $xpath->query("method", $pagenode);
+		if($methodNode && $methodNode->length > 0 && $methodNode->item(0)->nodeValue) {
+			$objPage->setMethod($methodNode->item(0)->nodeValue);
+		}
+
 		// Add files for page
-		$filesNode = $pagenode->getElementsByTagName('file');
+		$filesNode = $xpath->query("file", $pagenode);
 		for($f = 0; $f < $filesNode->length; $f++) {
 			if($filesNode && $filesNode->item($f)) {
 				if($this->getRootpath())
@@ -83,45 +95,40 @@ abstract class Document extends Castor {
 		}
 
 		// Overwrite elements
-		$arrNodes = $pagenode->getElementsByTagName('arr');
+		$arrNodes = $xpath->query("arr", $pagenode);
 		for($e = 0; $e < $arrNodes->length; $e++) {
 			$arr = array();
 		
 			$item = $arrNodes->item($e);
-			if($item->parentNode->nodeName == 'page') {
-				$arrname = $item->getAttribute('name');
-				$variables = $item->getElementsByTagName('var');
-				for($f = 0; $f < $variables->length; $f++) {
-					$var = $variables->item($f);
-					$name = $var->getAttribute('name');
-					$value = $var->nodeValue;
-			
-					$arr[$name] = $value;
-				}
-
-				$objPage->setElement($arrname, $arr);
+			$arrname = $item->getAttribute('name');
+			$variables = $item->getElementsByTagName('var');
+			for($f = 0; $f < $variables->length; $f++) {
+				$var = $variables->item($f);
+				$name = $var->getAttribute('name');
+				$value = $var->nodeValue;
+		
+				$arr[$name] = $value;
 			}
+
+			$objPage->setElement($arrname, $arr);
 
 			unset($arr);
 		}
 
 		// Add Constants for Page
-		$constantNodes = $pagenode->getElementsByTagName('constant');
+		$constantNodes = $xpath->query("constant", $pagenode);
 		if($constantNodes) {
 			for($f = 0; $f < $constantNodes->length; $f++) {
 				$item = $constantNodes->item($f);
-				if($item->parentNode->nodeName == 'page') {
-					$objPage->addConstant($item->getAttribute('name'), $item->nodeValue);
-				}
+				$objPage->addConstant($item->getAttribute('name'), $item->nodeValue);
 			}
 		}
 
 		// Expand nodes for Page
 		$expand = array();
-		$expandNodes = $pagenode->getElementsByTagName('expand');
+		$expandNodes = $xpath->query("expand", $pagenode);
 		if($expandNodes && $expandNodes->length > 0) {
-			$j = 0;
-			while($j < $expandNodes->length) {
+			for($j = 0; $j < $expandNodes->length; $j++) {
 				$var = $expandNodes->item($j);
 				$name = $var->getAttribute('node');
 
@@ -129,21 +136,17 @@ abstract class Document extends Castor {
 
 				$addNodes = $var->getElementsByTagName('add');
 				if($addNodes && $addNodes->length > 0) {
-					$length = 0;
-					$expand[$name][$length] = array();
+					$expand[$name][$j] = array();
 		
 					for($g = 0; $g < $addNodes->length; $g++) {
 						$varAddNode = $addNodes->item($g);
 						$addNodeName = $varAddNode->getAttribute('name');
 		
-						$expand[$name][$length][$addNodeName] = $varAddNode->nodeValue;
+						$expand[$name][$j][$addNodeName] = $varAddNode->nodeValue;
 					}
-					$length = 0;
 				} else {
 					$expand[$name][0] = array();
 				}
-		
-				$j++;
 			}
 
 			$objPage->setNodes($expand);
@@ -154,26 +157,42 @@ abstract class Document extends Castor {
 		return true;
 	}
 
-	public function createActions($pagename, $template) {
+	public function createActions($pagename, $pagenode, $actionname = false) {
 		if($this->pageExists($pagename))
 			throw new Exception("Page: ".$pagename." is not inimitable!");
 
-		if(!$this->createPage($pagename, $template->getElementsByTagName('page')->item(0)))
+		if(!$this->createPage($pagename, $pagenode))
 			throw new Exception("Fatal Error: Cannot create ".$pagename);
 
-		$actionNodes = $template->getElementsByTagName('action');
+		$xpath = new DOMXpath($this->domDocumentObj);
+
+		if($actionname) {
+			$actionNodes = $xpath->query("action[@name='".$actionname."']", $pagenode);
+		} else {
+			$actionNodes = $xpath->query("action", $pagenode);
+		}
 
 		for($i = 0; $i < $actionNodes->length; $i++) {
 			$actionNode = $actionNodes->item($i);
 			if($actionNode) {
 				$actionname = $actionNode->getAttribute('name');
-				$classNode = $actionNode->getElementsByTagName('class');
-				$class = $classNode->item(0)->nodeValue;
-				$methodNode = $actionNode->getElementsByTagName('method');
-				$method = $methodNode->item(0)->nodeValue;
+
+				$classNode = $xpath->query("class", $actionNode);
+				if($classNode && $classNode->length > 0 && $classNode->item(0)->nodeValue) {
+					$class = $classNode->item(0)->nodeValue;
+				} else {
+					$class = $this->sitemap[$pagename]->getClass();
+				}
+
+				$methodNode = $xpath->query("method", $actionNode);
+				if($methodNode && $methodNode->length > 0 && $methodNode->item(0)->nodeValue) {
+					$method = $methodNode->item(0)->nodeValue;
+				} else {
+					$method = $this->sitemap[$pagename]->getMethod();
+				}
 
 				$this->sitemap[$pagename]->addAction($actionname, $class, $method);
-				$fileNode = $actionNode->getElementsByTagName('file');
+				$fileNode = $xpath->query("file", $actionNode);
 				if($fileNode) {
 					$item = $fileNode->item(0);
 					if($item && $item->nodeValue != '') {
@@ -191,24 +210,23 @@ abstract class Document extends Castor {
 				$title = $actionNode->getAttribute('title');
 				$this->sitemap[$pagename]->setActionTitle($title, $actionname);
 
-				$styleNode = $actionNode->getElementsByTagName('style');
-				if($styleNode) {
-					$renderBy = $styleNode->item(0)->getAttribute('renderby');
-					if($styleNode->item(0)->nodeValue != '') {
-						$this->sitemap[$pagename]->setStylesheet($actionname, $styleNode->item(0)->nodeValue);
+				$styleNodes = $xpath->query("style", $actionNode);
+				if($styleNodes && $styleNodes->item(0)) {
+					$renderBy = $styleNodes->item(0)->getAttribute('renderby');
+					$this->sitemap[$pagename]->setRendering($actionname, $renderBy);
+					if($styleNodes->item(0)->nodeValue != '') {
+						$this->sitemap[$pagename]->setStylesheet($actionname, $styleNodes->item(0)->nodeValue);
 					}
 				}
 
-				$this->sitemap[$pagename]->setRendering($actionname, $renderBy);
-
 				// Add elements for action
-				$arrNodes = $actionNode->getElementsByTagName('arr');
+				$arrNodes = $xpath->query("arr", $actionNode);
 				for($e = 0; $e < $arrNodes->length; $e++) {
 					$arr = array();
 				
 					$item = $arrNodes->item($e);
 					$arrname = $item->getAttribute('name');
-					$variables = $item->getElementsByTagName('var');
+					$variables = $xpath->query("var", $item);
 					for($f = 0; $f < $variables->length; $f++) {
 						$var = $variables->item($f);
 						$name = $var->getAttribute('name');
@@ -223,7 +241,7 @@ abstract class Document extends Castor {
 				}
 
 				// Add Constants for Action
-				$constantNodes = $actionNode->getElementsByTagName('constant');
+				$constantNodes = $xpath->query("constant", $actionNode);
 				if($constantNodes) {
 					for($e = 0; $e < $constantNodes->length; $e++) {
 						$var = $constantNodes->item($e);
@@ -236,37 +254,33 @@ abstract class Document extends Castor {
 
 				// Expand Nodes for Action
 				$expand = array();
-				
-				$expandNodes = $actionNode->getElementsByTagName('expand');
+
+				$expandNodes = $xpath->query("expand", $actionNode);
 				if($expandNodes && $expandNodes->length > 0) {
-					$j = 0;
-					while($j < $expandNodes->length) {
-						$var = $expandNodes->item($j);
-						$name = $var->getAttribute('node');
+					for($j = 0; $j < $expandNodes->length; $j++) {
+						$item = $expandNodes->item($j);
+						$name = $item->getAttribute('node');
 
 						$expand[$name] = array();
+						$expand[$name][$j] = array();
 
-						$addNodes = $var->getElementsByTagName('add');
+						$addNodes = $xpath->query("add", $actionNode);
 						if($addNodes && $addNodes->length > 0) {
-							$length = 0;
-							$expand[$name][$length] = array();
-				
 							for($g = 0; $g < $addNodes->length; $g++) {
 								$varAddNode = $addNodes->item($g);
 								$addNodeName = $varAddNode->getAttribute('name');
-				
-								$expand[$name][$length][$addNodeName] = $varAddNode->nodeValue;
+
+								$expand[$name][$j][$addNodeName] = $varAddNode->nodeValue;
 							}
-							$length = 0;
 						} else {
 							$expand[$name][0] = array();
 						}
-				
-						$j++;
 					}
 
 					$this->sitemap[$pagename]->setLocalNodes($actionname, $expand);
 				}
+			} else {
+				return false;
 			}
 		}
 
