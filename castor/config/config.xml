@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
 	<document>
-		<path>xxxx</path>
+		<path>../</path>
 		<root action="index">home</root>
-		<file>xxxx.php</file>
+		<file>indexController.php</file>
 	</document>
 	<sitemap>
 		<page name="home" index="index" return="DomDocument">
-			<class>xxxxController</class>
-			<method>xxxxAction</method>
+			<class>indexController</class>
+			<method>indexAction</method>
 
 			<action name="index">
 				<arr name="test">
 					<var name="testi">Testx</var>
 				</arr>
-				<style renderby="server">/var/www/htdocs/styles/xss/index.xsl</style>
-			</action>
-			<action name="second">
-				<style renderby="server">/var/www/htdocs/styles/xss/second.xsl</style>
+				<style renderby="server">../example/styles/xss/index.xsl</style>
 			</action>
 		</page>
 	</sitemap>
