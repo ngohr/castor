@@ -134,7 +134,7 @@ abstract class Document extends Castor {
 
 				$expand[$name] = array();
 
-				$addNodes = $var->getElementsByTagName('add');
+				$addNodes = $xpath->query("add", $var);
 				if($addNodes && $addNodes->length > 0) {
 					$expand[$name][$j] = array();
 		
@@ -264,7 +264,7 @@ abstract class Document extends Castor {
 						$expand[$name] = array();
 						$expand[$name][$j] = array();
 
-						$addNodes = $xpath->query("add", $actionNode);
+						$addNodes = $xpath->query("add", $item);
 						if($addNodes && $addNodes->length > 0) {
 							for($g = 0; $g < $addNodes->length; $g++) {
 								$varAddNode = $addNodes->item($g);
