@@ -126,29 +126,34 @@ abstract class Document extends Castor {
 
 		// Expand nodes for Page
 		$expand = array();
+		
 		$expandNodes = $xpath->query("expand", $pagenode);
 		if($expandNodes && $expandNodes->length > 0) {
+			$x = 0;
 			for($j = 0; $j < $expandNodes->length; $j++) {
-				$var = $expandNodes->item($j);
-				$name = $var->getAttribute('node');
-
-				$expand[$name] = array();
-
-				$addNodes = $xpath->query("add", $var);
-				if($addNodes && $addNodes->length > 0) {
-					$expand[$name][$j] = array();
+				$item = $expandNodes->item($j);
+				$name = $item->getAttribute('node');
 		
+				$addNodes = $xpath->query("add", $item);
+				if($addNodes && $addNodes->length > 0) {
+					$expand[$name][$x] = array();
+
 					for($g = 0; $g < $addNodes->length; $g++) {
 						$varAddNode = $addNodes->item($g);
 						$addNodeName = $varAddNode->getAttribute('name');
 		
-						$expand[$name][$j][$addNodeName] = $varAddNode->nodeValue;
+						$expand[$name][$x][$addNodeName] = $varAddNode->nodeValue;
 					}
+
+					$x++;
 				} else {
-					$expand[$name][0] = array();
+					if($item->nodeValue)
+						$expand[$name] = $item->nodeValue;
+					else
+						$expand[$name] = "";
 				}
 			}
-
+		
 			$objPage->setNodes($expand);
 		}
 
@@ -200,7 +205,7 @@ abstract class Document extends Castor {
 							$file = $this->getRootpath().'/'.$item->nodeValue;
 						else
 							$file = $item->nodeValue;
-				
+
 						$this->sitemap[$pagename]->addFile($file, $actionname);
 					}
 				}
@@ -223,7 +228,7 @@ abstract class Document extends Castor {
 				$arrNodes = $xpath->query("arr", $actionNode);
 				for($e = 0; $e < $arrNodes->length; $e++) {
 					$arr = array();
-				
+
 					$item = $arrNodes->item($e);
 					$arrname = $item->getAttribute('name');
 					$variables = $xpath->query("var", $item);
@@ -231,7 +236,7 @@ abstract class Document extends Castor {
 						$var = $variables->item($f);
 						$name = $var->getAttribute('name');
 						$value = $var->nodeValue;
-				
+
 						$arr[$name] = $value;
 					}
 
@@ -254,26 +259,31 @@ abstract class Document extends Castor {
 
 				// Expand Nodes for Action
 				$expand = array();
-
+				
 				$expandNodes = $xpath->query("expand", $actionNode);
 				if($expandNodes && $expandNodes->length > 0) {
+					$x = 0;
 					for($j = 0; $j < $expandNodes->length; $j++) {
 						$item = $expandNodes->item($j);
 						$name = $item->getAttribute('node');
-
-						$expand[$name] = array();
-						$expand[$name][$j] = array();
-
+				
 						$addNodes = $xpath->query("add", $item);
 						if($addNodes && $addNodes->length > 0) {
+							$expand[$name][$x] = array();
+				
 							for($g = 0; $g < $addNodes->length; $g++) {
 								$varAddNode = $addNodes->item($g);
 								$addNodeName = $varAddNode->getAttribute('name');
-
-								$expand[$name][$j][$addNodeName] = $varAddNode->nodeValue;
+				
+								$expand[$name][$x][$addNodeName] = $varAddNode->nodeValue;
 							}
+				
+							$x++;
 						} else {
-							$expand[$name][0] = array();
+							if($item->nodeValue)
+								$expand[$name] = $item->nodeValue;
+							else
+								$expand[$name] = "";
 						}
 					}
 
