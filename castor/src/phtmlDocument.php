@@ -11,14 +11,16 @@
  * @todos
  *
  * #001 Returntype DomDocument is not supported
- *
+ * #002 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
+ * #003 implement compress output for return 'site' actions
+ * 
  * @author
  *
  * Nanno Gohr
  *
  * @version
  *
- * 1.0 / 12.11.2014
+ * 1.0 / 24.11.2014
  *
  */
 
@@ -138,6 +140,29 @@ class phtmlDocument extends Document {
 				return true;
 					
 				break;
+
+			case 'file':
+				ob_start();
+
+				$stylesheet = $objPage->getStylesheet($action);
+				$handle = @fopen($stylesheet, "r");
+				if($handle) {
+					while(($buffer = fgets($handle)) !== false) {
+						echo $buffer;
+					}
+
+					if (!feof($handle)) {
+						throw new Exception("Fatal Error: cannot read ".$stylesheet);
+					}
+					fclose($handle);
+				} else {
+					throw new Exception("Fatal Error: cannot open ".$stylesheet);
+				}
+
+				header('Content-Type: text/html; charset=UTF-8');
+				ob_end_flush();
+
+				return true;
 		}
 
 		$stylesheet = $objPage->getStylesheet($action);
@@ -150,7 +175,7 @@ class phtmlDocument extends Document {
 			return false;
 		}
 
-		ob_flush();
+		ob_end_flush();
 
 		return true;
 	}

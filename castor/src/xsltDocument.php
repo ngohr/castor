@@ -11,7 +11,7 @@
  * @todos
  * 
  * #001 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
- * #002 Returntype json and xml is not an individual for text/html, take a finnaly decission for saveXML or saveHTML ways...
+ * #003 implement compress output for return 'site' actions
  * 
  * @author
  * 
@@ -19,7 +19,7 @@
  * 
  * @version
  * 
- * 1.0 / 12.11.2014
+ * 1.0 / 24.11.2014
  * 
  */
 
@@ -187,7 +187,7 @@ class xsltDocument extends Document {
 				ob_flush();
 
 				break;
-	
+
 			case 'json':
 				if(!$action) {
 					$send = array();
@@ -198,22 +198,45 @@ class xsltDocument extends Document {
 				} else {
 					echo json_encode($objPage->call($action));
 				}
-	
+
 				return true;
-					
+
 				break;
+
+			case 'file':
+				ob_start();
+
+				$stylesheet = $objPage->getStylesheet($action);
+				$handle = @fopen($stylesheet, "r");
+				if($handle) {
+					while(($buffer = fgets($handle)) !== false) {
+						echo $buffer;
+					}
+
+					if (!feof($handle)) {
+						throw new Exception("Fatal Error: cannot read ".$stylesheet);
+					}
+					fclose($handle);
+				} else {
+					throw new Exception("Fatal Error: cannot open ".$stylesheet);
+				}
+
+				header('Content-Type: text/html; charset=UTF-8');
+				ob_end_flush();
+
+				return true;
 		}
-	
+
 		// A redering-type isnt mandatory, if no stylesheet was given, relates #006
 		switch($objPage->getRendering($action)) {
 			case 'client':
 				$stylesheet = $objPage->getStylesheet($action);
-	
+
 				if(!empty($stylesheet)) {
 					$xslt = $this->domDocumentPage->createProcessingInstruction(
-							'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
+						'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
 					);
-						
+
 					$this->domDocumentPage->appendChild($xslt);
 					$this->domDocumentPage->appendChild($this->root);
 				} else {
@@ -234,14 +257,14 @@ class xsltDocument extends Document {
 	
 				break;
 	
-			case 'html5':
+			case 'html':
 				$this->domDocumentPage->appendChild($this->root);
 				$stylesheet = $objPage->getStylesheet($action);
 					
 				$this->sendHTML5($stylesheet);
 					
 				break;
-	
+
 			// relates todo #002
 			case 'xml':
 				header('Content-type: text/xml; charset=UTF-8');
