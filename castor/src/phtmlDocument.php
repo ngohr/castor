@@ -13,6 +13,7 @@
  * #001 Returntype DomDocument is not supported
  * #002 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
  * #003 implement compress output for return 'site' actions
+ * #004 Return Json as application/json, but thats not interoperable...
  * 
  * @author
  *
@@ -120,13 +121,16 @@ class phtmlDocument extends Document {
 					echo $objPage->call($action);
 				}
 
-				ob_flush();
+				header('Content-Type: text/html; charset=UTF-8');
+				ob_end_flush();
 
 				return true;
 					
 				break;
 
 			case 'json':
+				ob_start();
+
 				if(!$action) {
 					$send = array();
 					foreach($objPage->load() as $index => $value) {
@@ -137,8 +141,10 @@ class phtmlDocument extends Document {
 					echo json_encode($objPage->call($action));
 				}
 
+				ob_end_flush();
+
 				return true;
-					
+
 				break;
 
 			case 'file':
@@ -163,6 +169,37 @@ class phtmlDocument extends Document {
 				ob_end_flush();
 
 				return true;
+				
+				break;
+
+			default:
+				// Contruct DomDocument Elements from a given array, returned from $objPage->call($action);
+				$returnvalue = $objPage->call($action);
+				if($returnvalue && is_array($returnvalue)) {
+					foreach($returnvalue as $index => $value) {
+						if(!is_array($value)) {
+							View::Add($index, $value);
+						} else {
+							$arr[$index] = array();
+							if(is_numeric($index)) {
+								for($i = 0; $i < count($value); $i++) {
+									$arr[$index][$i] = array();
+									foreach($value[$i] as $xxx => $yyy) {
+										$arr[$index][$i][$xxx] = $yyy;
+									}
+									View::Add($index, $arr[$index]);
+								}
+							} else {
+								foreach($value as $xxx => $yyy) {
+									$arr[$index][$xxx] = $yyy;
+								}
+							}
+						}
+						View::Add($index, $arr[$index]);
+					}
+				}
+				
+				break;
 		}
 
 		$stylesheet = $objPage->getStylesheet($action);

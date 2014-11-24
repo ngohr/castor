@@ -12,6 +12,7 @@
  * 
  * #001 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
  * #003 implement compress output for return 'site' actions
+ * #004 Return Json as application/json, but thats not interoperable...
  * 
  * @author
  * 
@@ -182,13 +183,16 @@ class xsltDocument extends Document {
 					echo $objPage->call($action);
 				}
 
-				return true;
+				header('Content-Type: text/html; charset=UTF-8');
+				ob_end_flush();
 
-				ob_flush();
+				return true;
 
 				break;
 
 			case 'json':
+				ob_start();
+
 				if(!$action) {
 					$send = array();
 					foreach($objPage->load() as $index => $value) {
@@ -198,6 +202,8 @@ class xsltDocument extends Document {
 				} else {
 					echo json_encode($objPage->call($action));
 				}
+
+				ob_end_flush();
 
 				return true;
 
@@ -225,6 +231,23 @@ class xsltDocument extends Document {
 				ob_end_flush();
 
 				return true;
+
+				break;
+
+			default:
+				// Import the node, and all its children, to the document
+				$returnvalue = $objPage->call($action);
+				if($returnvalue) {
+					foreach($returnvalue->childNodes as $sibling) {
+						$node = $this->domDocumentPage->importNode($sibling, true);
+						$this->root->appendChild($node);
+					}
+				
+					$expand = $objPage->getLocalNodes($action);
+					$this->expandNodes($objPage, $action);
+				}
+				
+				break;
 		}
 
 		// A redering-type isnt mandatory, if no stylesheet was given, relates #006
@@ -255,14 +278,6 @@ class xsltDocument extends Document {
 
 				$this->sendHTML($stylesheet);
 	
-				break;
-	
-			case 'html':
-				$this->domDocumentPage->appendChild($this->root);
-				$stylesheet = $objPage->getStylesheet($action);
-					
-				$this->sendHTML5($stylesheet);
-					
 				break;
 
 			// relates todo #002
@@ -333,6 +348,7 @@ class xsltDocument extends Document {
 		$output = $xpr->transformToDoc($this->domDocumentPage);
 	
 		header('Content-Type: text/html; charset=UTF-8');
+
 		echo $output->saveHTML();
 	
 		return true;
