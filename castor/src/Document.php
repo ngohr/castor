@@ -52,9 +52,12 @@ abstract class Document extends Castor {
 
 		$titleNode = $xpath->query("title", $pagenode);
 		if($titleNode) {
-			$title = $titleNode->item(0)->nodeValue;
-			if($title && $title != '')
-				$objPage->setTitle($title);
+			$item = $titleNode->item(0);
+			if($item) {
+				$title = $item->nodeValue;
+				if($title && $title != '')
+					$objPage->setTitle($title);
+			}
 		}
 
 		// Add Rootfile
