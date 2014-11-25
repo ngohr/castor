@@ -129,6 +129,7 @@ class phtmlDocument extends Document {
 				break;
 
 			case 'json':
+				header('Content-Type: application/json');
 				ob_start();
 
 				if(!$action) {

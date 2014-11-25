@@ -191,6 +191,7 @@ class xsltDocument extends Document {
 				break;
 
 			case 'json':
+				header('Content-Type: application/json; charset=UTF-8');
 				ob_start();
 
 				if(!$action) {
