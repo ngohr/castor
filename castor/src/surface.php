@@ -5,7 +5,7 @@
  * 
  * - A Surface is a primitive data model, that copy elements, constants and pagenames from $instance to local data procced by $this->init() in final constructs.
  * - A Surface instead of an Operator, do not valid external data.
- * - A Surface must implement a method to connect a node, especially sockets or object instances and overwrite a param connect(&$connection)
+ * - A Surface must implement a method to connect a node, especially sockets or object instances
  * - A method close, shouldt shutdown the connections, a pointer for factory classes shouldt be unuseable after calling close...
  * - A method reset, shouldt be available to reset a surface, respective a connection to null and start it again...
  * 
