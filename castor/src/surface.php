@@ -26,8 +26,7 @@ abstract class Surface extends Application {
 	public $error = false;
 
 	abstract function init();
-	abstract function connect();
-	abstract function mirror(&$connection);
+	abstract function &connect();
 	abstract function close();
 	abstract function reset();
 
