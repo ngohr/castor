@@ -12,8 +12,7 @@
  *
  * #001 Returntype DomDocument is not supported
  * #002 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
- * #003 implement compress output for return 'site' actions
- * #004 Return Json as application/json, but thats not interoperable...
+ * #003 implement compressed output
  * 
  * @author
  *
