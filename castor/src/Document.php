@@ -251,7 +251,7 @@ abstract class Document extends Castor {
 					}
 				}
 
-				// Load Modules for Page
+				// Load Modules for Actions
 				$loadNodes = $xpath->query("load", $actionNode);
 				if($loadNodes->length > 0) {
 					for($i = 0; $i < $loadNodes->length; $i++) {
