@@ -44,9 +44,10 @@ abstract class Castor {
 
 	public $document;
 	public $sitemap = array();
-	private $operator = array();
-	private $adapter = array();
-
+	public $operator = array();
+	public $adapter = array();
+	public $surface = array();
+	
 	public $sitemapNode;
 
 	public $rootpath;
@@ -57,9 +58,6 @@ abstract class Castor {
 	// document / arr nodes
 	public $elements = array();
 
-	// document / arr nodes
-	private $surface = array();
-
 	abstract function createActions($pagename, $templateObj);
 
 	public function __construct($file, $pagename = false, $actionname = false, $notCreate = false) {
@@ -67,6 +65,16 @@ abstract class Castor {
 		$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
 		$this->domDocumentObj->preserveWhiteSpace = true;
 		$this->domDocumentObj->formatOutput = true;
+
+		if($file) {
+			if(!file_exists($file))
+				throw new Exception('Config File: '.$file.' not exists!');
+		} else {
+			if(!file_exists(SITE_PATH.'/config/config.xml'))
+				throw new Exception('Default Config File: '.SITE_PATH.'/config/config.xml not exists!');
+			else
+				$file = SITE_PATH.'/config/config.xml';
+		}
 
 		$this->domDocumentObj->load($file);
 
@@ -332,6 +340,30 @@ abstract class Castor {
 			}
 		}
 
+		// Load Modules for DocumentElements
+		$loadNodes = $xpath->query("load", $elementDocument);
+		if($loadNodes->length > 0) {
+			for($i = 0; $i < $loadNodes->length; $i++) {
+				$loadNode = $loadNodes->item($i);
+				$type = $loadNode->getAttribute('type');
+				$name = $loadNode->nodeValue;
+				switch($type) {
+					case 'surface':
+						module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
+						$objSurface->setElements($this->surface[$name]['elements']);
+					break;
+					case 'operator':
+						module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
+						$objOperator->setElements($this->operator[$name]['elements']);
+					break;
+					case 'adapter':
+						module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objOperator);
+						$objOperator->setElements($this->adapter[$name]['elements']);
+					break;
+				}
+			}
+		}
+
 		$this->sitemapNode = $xpath->query("sitemap");
 		if($this->sitemapNode->length > 1) {
 			throw new Exception("Read Config: Node sitemap is not inimitable!");
@@ -376,8 +408,6 @@ abstract class Castor {
 				}
 			}
 		}
-
-		$this->loadModules();
 	}
 
 	public function setRootpath($value) {

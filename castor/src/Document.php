@@ -90,6 +90,30 @@ abstract class Document extends Castor {
 			}
 		}
 
+		// Load Modules for Page
+		$loadNodes = $xpath->query("load", $pagenode);
+		if($loadNodes->length > 0) {
+			for($i = 0; $i < $loadNodes->length; $i++) {
+				$loadNode = $loadNodes->item($i);
+				$type = $loadNode->getAttribute('type');
+				$name = $loadNode->nodeValue;
+				switch($type) {
+					case 'surface':
+						module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
+						$objSurface->setElements($this->surface[$name]['elements']);
+						break;
+					case 'operator':
+						module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
+						$objOperator->setElements($this->operator[$name]['elements']);
+						break;
+					case 'adapter':
+						module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objOperator);
+						$objOperator->setElements($this->adapter[$name]['elements']);
+						break;
+				}
+			}
+		}
+
 		// Add Rootelements
 		if(count($this->elements) > 0) {
 			foreach($this->elements as $index => $arr) {
@@ -224,6 +248,30 @@ abstract class Document extends Castor {
 					$this->sitemap[$pagename]->setRendering($actionname, $renderBy);
 					if($styleNodes->item(0)->nodeValue != '') {
 						$this->sitemap[$pagename]->setStylesheet($actionname, $styleNodes->item(0)->nodeValue);
+					}
+				}
+
+				// Load Modules for Page
+				$loadNodes = $xpath->query("load", $actionNode);
+				if($loadNodes->length > 0) {
+					for($i = 0; $i < $loadNodes->length; $i++) {
+						$loadNode = $loadNodes->item($i);
+						$type = $loadNode->getAttribute('type');
+						$name = $loadNode->nodeValue;
+						switch($type) {
+							case 'surface':
+								module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
+								$objSurface->setElements($this->surface[$name]['elements']);
+								break;
+							case 'operator':
+								module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
+								$objOperator->setElements($this->operator[$name]['elements']);
+								break;
+							case 'adapter':
+								module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objOperator);
+								$objOperator->setElements($this->adapter[$name]['elements']);
+								break;
+						}
 					}
 				}
 
