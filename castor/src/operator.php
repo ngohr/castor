@@ -42,7 +42,6 @@ abstract class Operator extends Application {
 	public function __construct() {
 		$this->memcacheObj = new Memcache;
 		
-		$this->memcacheObj->connect("localhost", 11211);
 		$this->memcacheObj->addServer("localhost", 11211);
 	}
 
