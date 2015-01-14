@@ -11,7 +11,8 @@
  * @todos
  * 
  * #001 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
- * #003 implement compressed output
+ * #003 implement compress output for return 'file' actions
+ * #004 Return Json as application/json, but thats not interoperable...
  * 
  * @author
  * 
@@ -189,6 +190,27 @@ class xsltDocument extends Document {
 
 				break;
 
+			case 'xml':
+				// Import the node, and all its children, to the document
+				$returnvalue = $objPage->call($action);
+				if($returnvalue) {
+					foreach($returnvalue->childNodes as $sibling) {
+						$node = $this->domDocumentObj->importNode($sibling, true);
+						$this->root->appendChild($node);
+					}
+			
+					$this->expandNodes($objPage, $action);
+				}
+			
+				header('Content-type: text/xml; charset=UTF-8');
+					
+				$this->domDocumentObj->appendChild($this->root);
+				$this->domDocumentObj->save('php://output');
+			
+				return true;
+					
+				break;
+
 			case 'json':
 				header('Content-Type: application/json; charset=UTF-8');
 				ob_start();
@@ -210,27 +232,30 @@ class xsltDocument extends Document {
 				break;
 
 			case 'file':
-				ob_start();
-
-				$stylesheet = $objPage->getStylesheet($action);
-				$handle = @fopen($stylesheet, "r");
-				if($handle) {
-					while(($buffer = fgets($handle)) !== false) {
-						echo $buffer;
+				$returnvalue = $objPage->call($action);
+				if($returnvalue) {
+					ob_start();
+	
+					$stylesheet = $objPage->getStylesheet($action);
+					$handle = @fopen($stylesheet, "r");
+					if($handle) {
+						while(($buffer = fgets($handle)) !== false) {
+							echo $buffer;
+						}
+	
+						if (!feof($handle)) {
+							throw new Exception("Fatal Error: cannot read ".$stylesheet);
+						}
+						fclose($handle);
+					} else {
+						throw new Exception("Fatal Error: cannot open ".$stylesheet);
 					}
-
-					if (!feof($handle)) {
-						throw new Exception("Fatal Error: cannot read ".$stylesheet);
-					}
-					fclose($handle);
-				} else {
-					throw new Exception("Fatal Error: cannot open ".$stylesheet);
+	
+					header('Content-Type: text/html; charset=UTF-8');
+					ob_end_flush();
+	
+					return true;
 				}
-
-				header('Content-Type: text/html; charset=UTF-8');
-				ob_end_flush();
-
-				return true;
 
 				break;
 
@@ -251,63 +276,66 @@ class xsltDocument extends Document {
 		}
 
 		// A redering-type isnt mandatory, if no stylesheet was given, relates #006
-		switch($objPage->getRendering($action)) {
-			case 'client':
-				$stylesheet = $objPage->getStylesheet($action);
-
-				if(!empty($stylesheet)) {
-					$xslt = $this->domDocumentPage->createProcessingInstruction(
-						'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
-					);
-
-					$this->domDocumentPage->appendChild($xslt);
-					$this->domDocumentPage->appendChild($this->root);
-				} else {
-					return false;
-				}
+		$rendertype = $objPage->getRendering($action);
+		if($rendertype) {
+			switch($rendertype) {
+				case 'client':
+					$stylesheet = $objPage->getStylesheet($action);
 	
-				$this->domDocumentPage->appendChild($this->root);
-	
-				$this->sendXml();
-	
-				break;
-	
-			case 'server':
-				$this->domDocumentPage->appendChild($this->root);
-				$stylesheet = $objPage->getStylesheet($action);
-
-				$this->sendHTML($stylesheet);
-	
-				break;
-
-			// relates todo #002
-			case 'xml':
-				header('Content-type: text/xml; charset=UTF-8');
-	
-				$this->domDocumentPage->appendChild($this->root);
-				$this->domDocumentPage->save('php://output');
-	
-				break;
-					
-			default:
-				$stylesheet = $objPage->getStylesheet($action);
-	
-				if(!empty($stylesheet)) {
-					$xslt = $this->domDocumentPage->createProcessingInstruction(
+					if(!empty($stylesheet)) {
+						$xslt = $this->domDocumentPage->createProcessingInstruction(
 							'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
-					);
+						);
 	
-					$this->domDocumentPage->appendChild($xslt);
+						$this->domDocumentPage->appendChild($xslt);
+						$this->domDocumentPage->appendChild($this->root);
+					} else {
+						return false;
+					}
+		
 					$this->domDocumentPage->appendChild($this->root);
-				} else {
-					return false;
-				}
+		
+					$this->sendXml();
+		
+					break;
+		
+				case 'server':
+					$this->domDocumentPage->appendChild($this->root);
+					$stylesheet = $objPage->getStylesheet($action);
 	
-				$this->domDocumentPage->appendChild($this->root);
+					$this->sendHTML($stylesheet);
+		
+					break;
 	
-				$this->sendXml();
-	
-				break;
+				// relates todo #002
+				case 'xml':
+					header('Content-type: text/xml; charset=UTF-8');
+		
+					$this->domDocumentPage->appendChild($this->root);
+					$this->domDocumentPage->save('php://output');
+		
+					break;
+						
+				default:
+					$stylesheet = $objPage->getStylesheet($action);
+		
+					if(!empty($stylesheet)) {
+						$xslt = $this->domDocumentPage->createProcessingInstruction(
+								'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
+						);
+		
+						$this->domDocumentPage->appendChild($xslt);
+						$this->domDocumentPage->appendChild($this->root);
+					} else {
+						return false;
+					}
+		
+					$this->domDocumentPage->appendChild($this->root);
+		
+					$this->sendXml();
+		
+					break;
+			}
 		}
 	
 		return true;
