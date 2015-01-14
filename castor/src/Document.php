@@ -223,7 +223,6 @@ abstract class Document extends Castor {
 					$method = $this->sitemap[$pagename]->getMethod();
 				}
 
-				trigger_error("Add Action: ".$actionname);
 				$this->sitemap[$pagename]->addAction($actionname, $class, $method);
 				$fileNode = $xpath->query("file", $actionNode);
 				if($fileNode) {
