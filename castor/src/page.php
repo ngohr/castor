@@ -37,6 +37,8 @@ class Page {
 	private $sitemap = array();
 	private $constants = array();
 	private $arrSurface = array();
+	private $arrOperator = array();
+	private $arrAdapter = array();
 	private $expand = array();
 	private $cachedir = false;
 	private $classname = false;
@@ -156,7 +158,7 @@ class Page {
 	public function setLocal($action, $name, $arr) {
 		if($this->actionExists($action)) {
 			// Local Elements will overwrite elements at load page
-			$this->arrAction[$action]->setLocal($name, $arr);
+			$this->arrAction[$action]->setElement($name, $arr);
 		} else {
 			return false;
 		}
@@ -166,7 +168,7 @@ class Page {
 
 	public function getLocal($action, $name) {
 		if($this->actionExists($action)) {
-			return $this->arrAction[$action]->getLocal($name);
+			return $this->arrAction[$action]->getElement($name);
 		}
 
 		return false;
@@ -184,6 +186,19 @@ class Page {
 		$this->arrAction[$action]->setConstant($name, $value);
 	}
 	
+	public function setLocals($action, &$objAction) {
+		if($this->elements) {
+			foreach($this->elements as $name => $value) {
+				$objAction->setElement($name, $value);
+			}
+		}
+	
+		if(count($this->locals[$action]) > 0) {
+			foreach($this->locals[$action] as $name => $value) {
+				$objAction->setElement($name, $value);
+			}
+		}
+	}
 
 	public function setNodes($arr) {
 		$this->expand = $arr;
@@ -311,6 +326,91 @@ class Page {
 		$this->arrSurface[$name] = $obj;
 	}
 
+	public function addLocalSurface($actionname, $name, $obj) {
+		$this->arrAction[$actionname]->addSurface($name, $obj);
+	}
+
+	public function getSurface($name = false) {
+		if(!$name)
+			return $this->arrSurface;
+		else
+			return $this->arrSurface[$name];
+	}
+
+	public function addOperator($name, $obj) {
+		$this->arrOperator[$name] = $obj;
+	}
+
+	public function addLocalOperator($actionname, $name, $obj) {
+		$this->arrAction[$actionname]->addOperator($name, $obj);
+	}
+
+	public function getOperator($name = false) {
+		if(!$name)
+			return $this->arrOperator;
+		else
+			return $this->arrOperator[$name];
+	}
+
+	public function addAdapter($name, $obj) {
+		$this->arrAdapter[$name] = $obj;
+	}
+
+	public function addLocalAdapter($actionname, $name, $obj) {
+		$this->arrAction[$actionname]->addAdapter($name, $obj);
+	}
+
+	public function loadAddons($actionname = false) {
+			$arrSurfaces = $this->getSurface();
+		foreach($arrSurfaces as $name => $obj) {
+			module::add($name, $obj['class'], $obj['file'], $objSurface);
+			$objSurface->setElements($obj['elements']);
+		}
+
+		if($actionname) {
+			$arrSurfaces = $this->arrAction[$actionname]->getSurface();
+			foreach($arrSurfaces as $name => $obj) {
+				module::add($name, $obj['class'], $obj['file'], $objSurface);
+				$objSurface->setElements($obj['elements']);
+			}
+		}
+
+			$arrOperator = $this->getOperator();
+		foreach($arrOperator as $name => $obj) {
+			module::add($name, $obj['class'], $obj['file'], $objOperator);
+			$objOperator->setElements($obj['elements']);
+		}
+		
+		if($actionname) {
+			$arrOperator = $this->arrAction[$actionname]->getOperator();
+			foreach($arrOperator as $name => $obj) {
+				module::add($name, $obj['class'], $obj['file'], $objOperator);
+				$objOperator->setElements($obj['elements']);
+			}
+		}
+
+		$arrAdapter = $this->getAdapter();
+		foreach($arrAdapter as $name => $obj) {
+			module::add($name, $obj['class'], $obj['file'], $objAdapter);
+			$objAdapter->setElements($obj['elements']);
+		}
+		
+		if($actionname) {
+			$arrAdapter = $this->arrAction[$actionname]->getAdapter();
+			foreach($arrAdapter as $name => $obj) {
+				module::add($name, $obj['class'], $obj['file'], $objAdapter);
+				$objAdapter->setElements($obj['elements']);
+			}
+		}
+	}
+
+	public function getAdapter($name = false) {
+		if(!$name)
+			return $this->arrAdapter;
+		else
+			return $this->arrAdapter[$name];
+	}
+
 	public function loadFiles($action = false) {
 		if($action) {
 			if($file = $this->arrAction[$action]->getFile()) {
@@ -338,13 +438,6 @@ class Page {
 	// Run all actions in $this->arrAction, setElements, setPagename and return Array($objAction->run())
 	public function load() {
 		foreach($this->arrAction as $action => $objAction) {
-			// Add Page Vars to $objAction
-			if($this->elements) {
-				foreach($this->elements as $name => $value) {
-					$objAction->setElement($name, $value);
-				}
-			}
-
 			$objAction->setPagename($this->getName());
 
 			if($this->getSitemap())
@@ -359,13 +452,6 @@ class Page {
 	// Load a defined Action, setElements, setPagename and returns $objAction->run()
 	public function call($action) {
 		$objAction = $this->arrAction[$action];
-
-		// Add Page Vars to $objAction
-		if($this->elements) {
-			foreach($this->elements as $name => $value) {
-				$objAction->setElement($name, $value);
-			}
-		}
 
 		$objAction->setPagename($this->getName());
 

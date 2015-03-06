@@ -143,6 +143,8 @@ class xsltDocument extends Document {
 		if(!$returnType)
 			$returnType = $objPage->getReturnTyp();
 
+		$objPage->loadAddons($action);
+
 		// relates #002 - Returntype json and xml is not an individual for text/html
 		switch($returnType) {
 			case 'DomDocument':

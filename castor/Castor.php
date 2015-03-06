@@ -304,7 +304,7 @@ abstract class Castor {
 				} else {
 					throw new Exception('Missing file for Adapter!');
 				}
-
+				
 				$classNode = $xpath->query("class", $node);
 				if(!$classNode || $classNode->length <= 0) {
 					throw new Exception('Missing class for Surface '.$adapterName.'!');

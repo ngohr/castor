@@ -36,8 +36,9 @@ class module {
 	}
 
 	static function add($name, $classname, $file, &$obj) {
-		if(!self::addFile($file))
+		if(!self::addFile($file)) {
 			throw new Exception('File '.$file.' not found!');
+		}
 
 		if(!array_key_exists($name, self::$arrModules) || !self::$arrModules[$name])
 			self::$arrModules[$name] = new $classname;
@@ -48,6 +49,10 @@ class module {
 	}
 
 	static function get($name, $instance) {
+		if(!array_key_exists($name, self::$arrModules)) {
+			throw new Exception('Module '.$name.' not found!');
+		}
+
 		return self::$arrModules[$name]->load($instance);
 	}
 }	

@@ -99,16 +99,13 @@ abstract class Document extends Castor {
 				$name = $loadNode->nodeValue;
 				switch($type) {
 					case 'surface':
-						module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
-						$objSurface->setElements($this->surface[$name]['elements']);
+						$objPage->addSurface($name, $this->surface[$name]);
 						break;
 					case 'operator':
-						module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
-						$objOperator->setElements($this->operator[$name]['elements']);
+						$objPage->addOperator($name, $this->operator[$name]);
 						break;
 					case 'adapter':
-						module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objOperator);
-						$objOperator->setElements($this->adapter[$name]['elements']);
+						$objPage->addAdapter($name, $this->adapter[$name]);
 						break;
 				}
 			}
@@ -260,16 +257,19 @@ abstract class Document extends Castor {
 						$name = $loadNode->nodeValue;
 						switch($type) {
 							case 'surface':
-								module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
-								$objSurface->setElements($this->surface[$name]['elements']);
+								$this->sitemap[$pagename]->addLocalSurface($actionname, $name, $this->surface[$name]);
+								// module::add($name, $this->surface[$name]['class'], $this->surface[$name]['file'], $objSurface);
+								// $objSurface->setElements($this->surface[$name]['elements']);
 								break;
 							case 'operator':
-								module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
-								$objOperator->setElements($this->operator[$name]['elements']);
+								$this->sitemap[$pagename]->addLocalOperator($actionname, $name, $this->operator[$name]);
+								// module::add($name, $this->operator[$name]['class'], $this->operator[$name]['file'], $objOperator);
+								// $objOperator->setElements($this->operator[$name]['elements']);
 								break;
 							case 'adapter':
-								module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objOperator);
-								$objOperator->setElements($this->adapter[$name]['elements']);
+								$this->sitemap[$pagename]->addLocalAdapter($actionname, $name, $this->adapter[$name]);
+								// module::add($name, $this->adapter[$name]['class'], $this->adapter[$name]['file'], $objOperator);
+								// $objOperator->setElements($this->adapter[$name]['elements']);
 								break;
 						}
 					}
@@ -294,6 +294,12 @@ abstract class Document extends Castor {
 					$this->sitemap[$pagename]->setLocal($actionname, $arrname, $arr);
 
 					unset($arr);
+				}
+
+				// Add Elements from Page
+				$pageElements = $this->sitemap[$pagename]->getElements();
+				foreach($pageElements as $index => $value) {
+					$this->sitemap[$pagename]->setLocal($actionname, $index, $value);
 				}
 
 				// Add Constants for Action
@@ -348,9 +354,29 @@ abstract class Document extends Castor {
 		return true;
 	}
 
+	public function getSitemap() {
+		return $this->sitemap;
+	}
+
 	public function setElements($arrname, $arr) {
 		foreach($this->sitemap as $index => $pageObj) {
 			$pageObj->setElement($arrname, $arr);
 		}
+	}
+
+	public function getStylesheet($page, $action) {
+		if(!$page) {
+			$page = $this->getRootpage();
+		}
+		
+		if(!$action) {
+			$action = $this->getRootaction();
+		}
+
+		return $this->sitemap[$page]->getStylesheet($action);
+	}
+	
+	public function setStylesheet($page, $action, $file) {
+		return $this->sitemap[$page]->setStylesheet($action, $file);
 	}
 }

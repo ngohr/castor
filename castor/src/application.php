@@ -68,6 +68,14 @@ class Application {
 			return false;
 	}
 
+	public function setTitle($value) {
+		$this->title = $value;
+	}
+	
+	public function getTitle() {
+		return $this->title;
+	}
+
 	// If sitemap was set, getSitemap and getSitemapArray couldt construct sitemap/page elements as model
 	// Thats for factory classes, websites repective PHP-Files and Obj Page
 	public function setSitemap($arr) {

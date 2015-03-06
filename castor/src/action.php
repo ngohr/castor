@@ -42,6 +42,9 @@ class Action {
 	private $cacheApplied = false;
 	private $mimeType = false;
 	private $file = false;
+	private $arrSurface = array();
+	private $arrOperator = array();
+	private $arrAdapter = array();
 
 	private $expand = array();
 
@@ -160,6 +163,39 @@ class Action {
 		return $this->locals;
 	}
 
+	public function addSurface($name, $obj) {
+		$this->arrSurface[$name] = $obj;
+	}
+	
+	public function getSurface($name = false) {
+		if(!$name)
+			return $this->arrSurface;
+		else
+			return $this->arrSurface[$name];
+	}
+	
+	public function addOperator($name, $obj) {
+		$this->arrOperator[$name] = $obj;
+	}
+	
+	public function getOperator($name = false) {
+		if(!$name)
+			return $this->arrOperator;
+		else
+			return $this->arrOperator[$name];
+	}
+	
+	public function addAdapter($name, $obj) {
+		$this->arrAdapter[$name] = $obj;
+	}
+	
+	public function getAdapter($name = false) {
+		if(!$name)
+			return $this->arrAdapter;
+		else
+			return $this->arrAdapter[$name];
+	}
+
 	public function setNodes($arr) {
 		$this->expand = $arr;
 	}
@@ -250,6 +286,7 @@ class Action {
 				$controller->overwriteElement($name, $arr);
 			}
 
+			$controller->setTitle($this->getTitle());
 			$controller->setSitemap($this->getSitemap());
 			$controller->setPagename($this->getPagename());
 			$controller->setActionname($this->getName());

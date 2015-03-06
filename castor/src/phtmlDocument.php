@@ -78,6 +78,8 @@ class phtmlDocument extends Document {
 		if(!$returnType)
 			$returnType = $objPage->getReturnTyp();
 
+		$objPage->loadAddons($action);
+
 		// relates #006 - Returntype json and xml is not an individual for text/html
 		switch($returnType) {
 			case 'Array':
