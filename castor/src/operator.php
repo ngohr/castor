@@ -335,7 +335,7 @@ abstract class Operator extends Application {
 				$this->set($name, array());
 			}
 		}
-		
+
 		$result->close();
 
 		return true;
