@@ -55,4 +55,11 @@ class module {
 
 		return self::$arrModules[$name]->load($instance);
 	}
+
+	static function exists($name) {
+		if(array_key_exists($name, self::$arrModules))
+			return true;
+
+		return false;
+	}
 }	

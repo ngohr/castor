@@ -320,12 +320,11 @@ class xsltDocument extends Document {
 						
 				default:
 					$stylesheet = $objPage->getStylesheet($action);
-		
 					if(!empty($stylesheet)) {
 						$xslt = $this->domDocumentPage->createProcessingInstruction(
 								'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
 						);
-		
+
 						$this->domDocumentPage->appendChild($xslt);
 						$this->domDocumentPage->appendChild($this->root);
 					} else {

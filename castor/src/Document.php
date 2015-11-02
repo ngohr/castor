@@ -67,7 +67,7 @@ abstract class Document extends Castor {
 		if($classNode && $classNode->length > 0 && $classNode->item(0)->nodeValue) {
 			$objPage->setClass($classNode->item(0)->nodeValue);
 		}
-		
+
 		$methodNode = $xpath->query("method", $pagenode);
 		if($methodNode && $methodNode->length > 0 && $methodNode->item(0)->nodeValue) {
 			$objPage->setMethod($methodNode->item(0)->nodeValue);
