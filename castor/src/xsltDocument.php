@@ -145,7 +145,6 @@ class xsltDocument extends Document {
 
 		$objPage->loadAddons($action);
 
-		// relates #002 - Returntype json and xml is not an individual for text/html
 		switch($returnType) {
 			case 'DomDocument':
 				// Import the node, and all its children, to the document

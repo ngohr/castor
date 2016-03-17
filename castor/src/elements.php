@@ -73,15 +73,16 @@ class elements {
 	
 				return false;
 			}
-	
+
 			if(is_array($value)) {
 				foreach($value as $subIndex => $subValue) {
 					if(is_array($subValue)) {
 						if(is_int($subIndex)) {
 							$node = $domDocumentObj->createElement($index);
-								
 							if(!self::createElementRepresentation($subValue, $domDocumentObj, $node)) {
 								self::setError('Cannot createElementRepresentation from numeric subIndex');
+
+								return false;
 							}
 						} else {
 							$node = $domDocumentObj->createElement($subIndex);
@@ -89,6 +90,8 @@ class elements {
 								$midNode = $domDocumentObj->createElement($subIndex);
 								if(!self::createElementRepresentation($subValue, $domDocumentObj, $midNode)) {
 									self::setError('Cannot createElementRepresentation from numeric subIndex');
+
+									return false;
 								}
 	
 								$node->appendChild($midNode);
@@ -104,7 +107,7 @@ class elements {
 						$text = $domDocumentObj->createTextNode($subValue);
 						$node->appendChild($text);
 					}
-	
+
 					$domElement->appendChild($node);
 				}
 			} else {
@@ -114,7 +117,6 @@ class elements {
 				$domElement->appendChild($node);
 			}
 		}
-
 		return true;
 	}
 }

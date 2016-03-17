@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Castor Handbuch</title>
+	</head>
+	<body style="font-family:arial, helvetica, sans-serif;">
+		<h1>Castor Handbuch</h1>
+		<a href="#createDocument">Erste Schritte</a><br>
+		<a href="#structure">Verzeichnisstruktur</a><br>
+		<a href="#viewandtemplates">View und Templates</a><br>
+		<a href="#returntypes">Returntypes</a><br>
+		<a href="#phtml">PHTML Dokumente</a><br>
+		<a href="#static">Statische Dokumente</a><br>
+		<a href="#elements">Elemente und Konstanten</a><br>
+		<a href="#sitemap">Sitemap</a><br>
+		<a href="#pageandactions">Page & Action</a><br>
+		<a href="#modules">AddOns, Plugins bzw. Module</a><br>
+		<p>
+			<a name="createDocument"></a>
+			<h2>Dokument und Konfiguration Erstellen</h2>
+			Die Kernaufgabe der Castor Komponenten ist es, eine MVC Struktur als Objekt Hierachie aufzubauen.<br>
+			Damit die Anwendung nicht auf feste Namengebung und Verzeichnisstrukturen angewiesen ist,<br>
+			wird die Hierachie in einer XML Datei definiert. Document Klassen sind auf eine Konfigurations-Datei angewiesen,<br>
+			eine Hierachie kann aber auch mithilfe der Klassen Page und Action aufgebaut werden, mehr dazu im Kapitel <a href="#pageandactions">Page & Action</a><br><br>
+			Die Konfiguration enth&auml;lt neben vielen m&ouml;glichkeiten zur Beschreibung der Struktur und Daten, folgende essentiellen Informationen.
+			<ul>
+				<li>Den Pfad zum Verzeichnis mit den PHP Dateien config -&gt; document -&gt; path</li>
+				<li>Eine Standard Aktion die durchgeführt wird, wenn keine Parameter vorhanden sind config -&gt; document -&gt; root</li>
+				<li>Eine Standard Datei mit einer Controller Klasse die in jedem Fall eingebunden wird config -&gt; document -&gt; file</li>
+				<li>Den Tag f&uuml;r eine Sitemap der vorhanden sein muss und in der aktuellen Version auch mit einer Beschreibung der root Action gefüllt sein muss config -&gt; sitemap</li>
+			</ul>
+			<p>
+			Die minimalste Config sieht aus wie folgt und sollte ausserhalb des Document Root Verzeichnis, lesbar für den Webserver abgelegt werden.<br>
+			Der Ordner Castor kann im Document Root abgelegt werden, empfohlen sei es aber diesen ausserhalb und die config.xml als Datei innerhalb des Verzeichnisses castor/config/ abzulegen.<br>
+			Wird beim initiallisieren der Seite keine config Datei angegeben, sucht das System im Verzeichniss config/ nach der Datei config.xml<br>
+			Das bsp. wurde dort vorbereitet. Die Angabe der DTD ist zur Zeit überflüssig, da noch keine Document Type Definition für ein endgültiges Format exisiert.
+			</p>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE config&gt;
+&lt;config&gt;
+	&lt;document&gt;
+		&lt;path&gt;controller&lt;/path&gt;
+		&lt;root action="welcome"&gt;home&lt;/root&gt;
+		&lt;file&gt;indexController.php&lt;/file&gt;
+	&lt;/document&gt;
+	&lt;sitemap&gt;
+	&lt;/sitemap&gt;
+&lt;/config&gt;
+</pre>
+<p>
+1. Der Pfad zum Verzeichnis mit den PHP Dateien muss relativ zur instanizierenden PHP Datei sein. Typischerweise wohl die Datei index.php im Document Root des Webservers.<br>
+2. Die Root Action muss innerhalb des unten beschriebenen sitemap tags definiert sein und bestimmt die Methode die aufgerufen wird, wenn keine Parameter an die Document Klassen übergeben werden.<br>
+3. Die Angabe einer Root Action ist zwingend erforderlich und soll im bsp. die Action "welcome" in der Page "home" ansteuern.<br><br>
+Die Datei im file Tag innerhalb des Document Tags wird für jede Action vererbt, die Angabe ist aber nicht zwingend erforderlich.<br>
+Durch die Angabe der Dateien in höheren Hierachien wird zwar die Konfiguration übersichtlich gehalten,<br>
+allerdings wird beim Aufruf einer Action die nicht innerhalb der Datei indexController.php definiert ist, diese trotzdem immer mit eingebunden.<br>
+Der größte Vorteil der Castor Klassen gegnüber anderen Frameworks und Kern-Modellen ist, das durch die Konfiguration des Objekt Baumes immer nur die Klassen und Dateien eingebunden werden die zwingend nötig sind.<br>
+Dieser Vorteil sollte in jedem Fall gewahrt bleiben.
+</p>
+Für ein einfaches bsp. muss die folgende Beschreibung im Node sitemap eingefügt werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;page name="home" index="welcome" return="DomDocument"&gt;
+	&lt;class&gt;indexController&lt;/class&gt;
+	&lt;method&gt;welcome&lt;/method&gt;
+	&lt;action name="welcome"&gt;
+		&lt;style renderby="client"&gt;/styles/welcome.xsl&lt;/style&gt;
+	&lt;/action&gt;
+&lt;/page&gt;
+</pre>
+<p>
+Die Angabe eines "file" Tags wie oben ist sowohl im Tag page als auch im Tag action möglich.<br>
+Ebenso können die Angaben der Tags "class" und "method" auch innerhalb des "action" Tags definiert oder wieder überschrieben werden.<br>
+In typischen Strukturen finden sich die Action Methoden einer Page meist in einer Controller Klasse.<br>
+In typischen bsp. würde man die "method" also in jedem action Tag definieren bzw. überschreiben und für die page eine gesamtgültige Datei mit einer Controller Klasse definieren.<br>
+Im Bsp. wird die action /home/welcome auf die Methode "welcome" der Klasse "indexController" innerhalb einer eingebundenen Datei geroutet.<br>
+In unserem bsp. ist nur eine allgemein eingebundene Datei im "document" Tag zu finden.<br>
+Wird bspw. eine page "user" erstellt, kann man für schöne Verzeichnis Strukturen eine Datei mit dem Tag "file" im "page" Tag einbinden und den "method" Tag innerhalb des "action" Tags definieren<br><br>
+Der Style Tag enthält die Datei mit einem Template, die erste Version von Castor wurde mit der Klasse "xsltDocument" geschrieben, die xsl Stylesheets nutzt.<br>
+Wird der Objekt Baum mit der Klasse phtmlDocument instanziert, findet sich hier eine PHP Datei mit HTML inhalten oder ähnliches.
+		</p>
+		<p>
+			<a name="structure"></a>
+			<h2>Erstellung der Verzeichniss Struktur</h2>
+			Die in der config angegeben Dateien und Pfade können relativ zur aufgerufenen PHP Datei oder mit einem führenden Slash absolut angegeben werden.<br>
+			Die Verzeichnis Struktur wie hier sollte etwa wie folgt aussehen:
+<pre style="padding:5px; background-color:lightgrey;">
+DOCUMENTROOT
+	/controller
+		- indexController.php
+	/styles
+		- welcome.xsl
+	/index.php
+</pre>
+			Die Datei die vom Webserver aufgerufen wird, wird im folgenden index.php genannt.
+			<h2>Aufruf der Root Action</h2>
+			Als Interface zum Framework stehen zwei Klassen zur Verfügung.<br>
+			Die Klasse xsltDocument wurde primär für das erstellen von Dokumenten mit einem XSL Template erstellt aber kennt verschiedene Wege den VIEW zu füllen.<br>
+			Die Klasse phtmlDocument, nutzt eine PHP Datei als Template und wird primär durch die statischen Methoden der Klasse View gefüllt.<br>
+			Siehe folgender Code:<br>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+$document = new xsltDocument();
+$document->loadPage();
+</pre>
+			Nach dem initalen instanziieren der xsltDoument Klasse, wird durch loadPage() die Standard Aktion aufgerufen.<br>
+			Als Standard wurde die Aktion welcome in der Seite home definiert: &lt;root action="welcome"&gt;home&lt;/root&gt;<br>
+			indexController.php sollte angelegt werden und minimal mit folgenden Code gefüllt werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		return false;
+	}
+}
+</pre>
+			Durch die Methode loadPage wird beim aufrufen der Seite www.meineseite.de/index.php jeder Request wie in der config angegeben nach indexController->welcome() geroutet.<br>
+			Der Konstruktor der Klasse kann im aktuellen bsp. überschrieben werden aber muss ein Child der Klasse Application sein, welche die essentiellen Funktion des Frameworks zur verfügung stellt.
+			<a name="viewandtemplates"></a>
+			<h2>View und Templates</h2>
+			Für die Action welcome im oberen bsp wurde ein xsl Stylesheet /styles/welcome.xsl angegeben. Die Elemente von xsltDocument müssen als XML Dokument erstellt werden.<br>
+			Durch die Einstellung renderby="client" im style tag der Konfig wird das Framework angewiesen keine Elemente direkt zu rendern, sondern nur den Stylesheet als ProcessingInstruction in das Dokument einzufügen.<br>
+			Da keine weiteren Definitionen vorgenommen wurden und der View mit keinen dynamischen Elementen gefüllt wurde, erhält der Browser folgende ausgabe:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;?xml-stylesheet type="text/xsl" href="/styles/welcome.xsl"?&gt;
+&lt;root&gt;&lt;/root&gt;
+</pre>
+			Alle g&auml;ngigen Browser sind xslt fähig, der Ursprungsgedanke von XML, nämlich nur Daten zu übertragen und diese in einem beliebigen Format zu rendern wurde aber fast von keinem Enterprise System umgesetzt.<br>
+			Überlicherweise wird xslt zum rendern von PDF oder Excel Dokumenten genutzt, zur Geschichte von Castor gehört aber auch das xslt als primäre Template Engine eingesetzt wurde.<br>
+			Wird im Stylesheet welcome.xsl also ein xsl Template wie folgt hinterlegt wird der Browser einen als h1 fomatieren String "Hello World" zur&uuml;ckgeben:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
+
+&lt;xsl:output method="html"
+    omit-xml-declaration="yes"
+    encoding="UTF-8"
+    indent="yes"
+	doctype-system="about:legacy-compat"
+/&gt;
+
+&lt;xsl:template match="/"&gt;
+&lt;html&gt;
+	&lt;head&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1&gt;Hello World&lt;/h1&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+&lt;/xsl:template&gt;
+
+&lt;/xsl:stylesheet&gt;
+</pre>
+			Ergibt:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;!DOCTYPE html "about:legacy-compat"&gt;
+&lt;html&gt;
+	&lt;head&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1&gt;Hello World&lt;/h1&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+		</p>
+		<p>
+			Die Angabe von "server" im renderby Attribut des "style" Tags weist die xsltDocument Klasse an bei vorhandenem PHP-XSL Modul bereits beim Routing Prozess das Rendering zu übernehmen und es wird reines HTML gesendet.<br>
+			Fans von xsl werden zwar häufig auf diese Methode zurückgreifen. Die Rechenzeit des Servers wird durch Template Preprozessoren aber belastet und auf dieser Seite hat das Clientseitige Rendern einen Vorteil.
+		</p>
+		<p>
+			<a name="returntypes"></a>
+			<h2>Returntypes</h2>
+			Um Dynamische Daten einzufügen gibt es verschiedene Möglichkeiten.<br>
+			Im Page Tag der Config findet sich oben der Parameter: return="DomDocument", was so viel bedeutet wie: "Die Methode des Controllers sollte ein Objekt vom Typ DomDocumentObj zurückgeben"<br>
+			Das Attribut kann auch im action Tag folgen und überschrieben werden.
+			Erstellt man ein Klasse wie hier:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+		$ausgabeNode = $domDocumentObj->createElement('ausgabe');
+		$txt = $domDocumentObj->createTextNode('Hello World');
+		$ausgabeNode->appendChild($txt);
+		$domDocumentObj->appendChild($ausgabeNode);
+
+		return $domDocumentObj;
+	}
+}
+</pre>
+			Erhält man ein Ergebniss wie hier:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;?xml-stylesheet type="text/xsl" href="/styles/welcome.xsl"?&gt;
+&lt;root&gt;
+	&lt;ausgabe&gt;Hello World&lt;/ausgabe&gt;
+&lt;/root&gt;
+</pre>
+			Der Satz Hello World im Template kann nun also mit dynamischen Daten etwa so ausgegeben werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;xsl:template match="/"&gt;
+&lt;html&gt;
+	&lt;head&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1&gt;&lt;xsl:value-of select="//ausgabe" />&lt;/h1&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+&lt;xsl:template&gt;
+</pre>
+			Verschiedene returntypes werden von den Dokumenten unterstützt:<br>
+			<h3>xsltDocument</h3>
+			<ul>
+				<li>DomDocument</li>
+				<li>Array</li>
+				<li>json</li>
+				<li>file</li>
+			</ul>
+			<h3>phtmlDocument</h3>
+			<ul>
+				<li>Array</li>
+				<li>json</li>
+				<li>file</li>
+			</ul><br>
+			Der ReturnType DomDocument ist zur Zeit nur mit der Klasse xsltDocument nutzbar.<br>
+			Bei einer Rückgabe von json wird der Styletag komplett ignoriert, ohne Angabe eines "style" Tags wird angenommen das ein DomDocument Objekt zurückgegeben wird. Mit einer Methode wie:<br>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		return false;
+	}
+}
+</pre>
+			Kann dies umgangen werden, alle Methoden die false liefern und nicht der returnType "file" angegeben ist, sind nicht auf einen "style" Tag angewiesen.<br>
+			Gibt man für die action oder page die in der config Datei definiert wurde den ReturnType Array an, könnte das obrige bsp wie folgt aussehen:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		return array('ausgabe' => 'Hello World');
+	}
+}
+</pre>
+			Startet man das selbe Programm mit dem returnType json, wird das Array hier schlichtweg als json Format codiert und der angegbene Stylsheet komplett ignoriert.<br>
+			Komplexere XML Dokumente werden mit mehr dimensionalen Array erstellt Zwar sind angaben wie:
+<pre style="padding:5px; background-color:lightgrey;">
+	$arr['ausgabe']['text'] = "Hello World";
+	$arr['ausgabe']['name'] = "Mein Name";
+</pre>
+			Primitiv und korrekt, wenn aber mehrere Datensätze zu einem Element benötigt werden, muss die folgende Dimension immer durch eine Zahl identfiziert werden:
+<pre style="padding:5px; background-color:lightgrey;">
+	$arr['freund'][0]['id'] = "1";
+	$arr['freund'][0]['name'] = "Sein Name 1";
+	$arr['freund'][1]['id'] = "2";
+	$arr['freund'][1]['name'] = "Sein Name 2";
+</pre>
+			Wird dieses Array vom Controller zurückgegeben, der returnType mit Array angegeben und der Controller durch xsltDocument instanziert erh&auml;lt man folgendes Ergebniss:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;?xml-stylesheet type="text/xsl" href="/styles/welcome.xsl"?&gt;
+&lt;root&gt;
+	&lt;freund&gt;
+		&lt;id&gt;1&lt;/id&gt;
+		&lt;name&gt;Sein Name 1&lt;/name&gt;
+	&lt;/freund&gt;
+	&lt;freund&gt;
+		&lt;id&gt;2&lt;/id&gt;
+		&lt;name&gt;Sein Name 2&lt;/name&gt;
+	&lt;/freund&gt;
+&lt;/root&gt;
+</pre>
+		Ohne angabe eines Stylesheets und keiner Angabe des Returntypes, versucht Castor aus einem DomDocument Objekt eine reine xml Datei mit passenden Header zu generieren.
+		</p>
+		<p>
+			<a name="phtml"></a>
+			<h2>phtmlDocument</h2>
+			Vor allem mit dem aussterben von xhtml/strict HTML Seiten wird xsl beinah ausschliesslich zum exportieren und transformieren in andere Formate verwendet.<br>
+			Als alternative zu xsl Stylesheets kann eine PHP Datei verwendet werden. Der Controller muss dazu durch die Klasse phtmlDocument instanziiert werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+$document = new phtmlDocument();
+$document->loadPage();
+</pre>
+			Wählt man den return type Array wie oben, kann das gesamte Array durch die statische Klasse View angesprochen werden, ein phtml Stylesheet für dieses bsp. k&ouml;nnte wie folgt aussehen:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;html&gt;
+	&lt;head&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1&gt;&lt;? echo View::get('ausgabe'); &gt;&lt;/h1&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+Phtml Doumente müssen nicht zwangsläufig ein gefülltes Array zurückgeben. Der Klasse View kann auch während der Laufzeit des Contollers, ein Wert übergeben werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		View::add("ausgabe", "Hello World");
+
+		return array();
+	}
+}
+</pre>
+		</p>
+		<p>
+			<a name="static"></a>
+			<h2>Statische Webseiten</h2>
+			Oft wird ein PHP-Programm für öffentliche Webseiten ohne Funktion, CMS, Fehlermeldungen und andere Dynamische Inhalte nur eingesetzt um bspw. den Aufruf zu protokollieren oder ein Cookie zu setzen.<br>
+			Solche Dokumente k&ouml;nnen durch den returnType "file" unabhängig von Designern erstellt werden.<br>
+			Der returnType "file" steht sowohl als phtmlDocument als auch als xsltDocument instanziierten Dokumenten zur verfügung.<br>
+			Das Framework erkennt früh wenn der returnType File angegeben wird und erzeugt so den geringsmöglichen overhead beim Routing und der Ausgabe.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE config&gt;
+&lt;config&gt;
+	&lt;document&gt;
+		&lt;path&gt;controller/&lt;path&gt;
+		&lt;root action="welcome"&gt;home&lt;/root&gt;
+		&lt;file&gt;indexController.php&lt;/file&gt;
+	&lt;/document&gt;
+	&lt;sitemap&gt;
+		&lt;page name="home" index="welcome" return="DomDocument"&gt;
+			&lt;class&gt;indexController&lt;/class&gt;
+			&lt;method&gt;welcome&lt;/method&gt;
+			&lt;action name="welcome"&gt;
+				&lt;style renderby="client"&gt;/styles/welcome.xsl&lt;/style&gt;
+			&lt;/action&gt;
+			&lt;action name="impressum" return="file"&gt;
+				&lt;class&gt;simpleController&lt;/class&gt;
+				&lt;method&gt;impressum&lt;/method&gt;
+				&lt;file&gt;simpleController.php&lt;/file&gt;
+				&lt;style&gt;/styles/impressum.html&lt;/style&gt;
+			&lt;/action&gt;
+		&lt;/page&gt;
+	&lt;/sitemap&gt;
+&lt;/config&gt;
+</pre>
+			Wird eine solche config.xml angelegt wird die action impressum der Seite home hinzugefügt. Man beachte das, das Attribut return aus dem page Tag, die Datei aus dem document-&gt;file Tag, als auch die Klasse und Methode &uuml;berschrieben wurden.<br>
+			Dieses vorgehen ist üblich da zwar default Werte gesetzt sein sollten, das Routing auf andere Seiten und Klassen aber im MVC Modell zur Strukturierung des Codes eingesetzt wird.<br>
+			Der style Tag wurde nicht mit einem renderby attribut versehen.<br>
+			Für dieses bsp. muss eine neue Datei controller/simpleController.php mit bspw. folgendem Inhalt angelegt werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class simpleController extends Application {
+	public function impressum() {
+		// Setzen sie einen Cookie
+		// Stellen sie eine DB Verbindung her und speichern sie etwas
+		// oder anderes
+
+		return false;
+	}
+}
+</pre>
+			Als Stylesheet wird im ordner styles, eine Datei namens impressum.html hinterlegt die ohne dynamische Inhalte und overhead an den Browser gesendet wird. Der Content Type entspricht dabei: text/html<br>
+			Da unsere Datei index.php jetzt nicht die root Seite der Homepage aufrufen soll, muss diese wie folgt modifiziert werden:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+$document = new phtmlDocument();
+$document->loadPage('home', 'impressum');
+</pre>
+			Als erster Parameter wird die Page übergeben, als zweiter die action. Wird nur die page übergeben, wird die action geladen die im index attribut des page Tags angegeben wurde.
+			Typisch für MVC organisierte PHP Programme ist der Aufruf mit einem Page und Action Parameter der oft mit redirect Modulen der Webserver in SEO-Urls umgewandelt wird.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+$page = false;
+$action = false;
+if(array_key_exists('page', $_GET)
+	$page = $_GET['page'];
+if(array_key_exists('action', $_GET)
+	$action = $_GET['action'];
+
+$document = new phtmlDocument();
+$document->loadPage($page, $action);
+</pre>
+		</p>
+		<p>
+			<a name="elements"></a>
+			<h2>Elemente und Konstanten</h2>
+			Ein großer Vorteil einer komplexen Konfiguration wie hier, ist nicht nur das die Beschreibung der Struktur auch für Projekt Neulinge offensichtlich lesbar und ohne Namenskonventionen ersichtlich ist,
+			sondern vor allem das weitere Elemente zur Beschreibung einer Action hinzugefügt werden können.
+			Innerhalb des document tags, des page tags oder des action tags können Konstanten definiert werden, die durch das Framework zugänglich gemacht werden.
+			Der arr Tag beginnt eine Sammlung von Konstanten die mit dem var tag innerhalb des arr Tags angelegt werden.
+			Der Einsatz von var Elementen ohne umschliessenden arr tag wird zurzeit nicht unterstützt.
+			Wenn die Datei config xml unzugänglich abgelegt wird, können so bspw. System Konstanten durch den Administrator eingetragen und geändert werden.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE config&gt;
+&lt;config&gt;
+	&lt;document&gt;
+		&lt;path&gt;controller/&lt;path&gt;
+		&lt;root action="welcome"&gt;home&lt;/root&gt;
+		&lt;file&gt;indexController.php&lt;/file&gt;
+	&lt;/document&gt;
+	&lt;sitemap&gt;
+		&lt;page name="home" index="welcome" return="DomDocument"&gt;
+			&lt;class&gt;indexController&lt;/class&gt;
+			&lt;method&gt;welcome&lt;/method&gt;
+			&lt;action name="welcome"&gt;
+				&lt;style renderby="client"&gt;/styles/welcome.xsl&lt;/style&gt;
+			&lt;/action&gt;
+			&lt;action name="impressum" return="file"&gt;
+				&lt;arr name="dbConstants"&gt;
+					&lt;var name="dbname">dbname&lt;/var&gt;
+					&lt;var name="host">127.0.0.1&lt;/var&gt;
+					&lt;var name="username">dbuser&lt;/var&gt;
+					&lt;var name="password">dbpassword&lt;/var&gt;
+				&lt;/arr&gt;
+
+				&lt;class&gt;simpleController&lt;/class&gt;
+				&lt;method&gt;impressum&lt;/method&gt;
+				&lt;file&gt;simpleController.php&lt;/file&gt;
+				&lt;style&gt;/styles/impressum.html&lt;/style&gt;
+			&lt;/action&gt;
+		&lt;/page&gt;
+	&lt;/sitemap&gt;
+&lt;/config&gt;
+</pre>
+			Im diesem bsp. wird der action impressum ein array mit konstanten übergeben die später mit der Methode getElements der Application Klasse für den Entwickler zugänglich sind:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class simpleController extends Application {
+	public function impressum() {
+		$dbdata = $this->getElements('dbConstants');
+
+		die("Jetzt eine Datenbankverbindung mit: ".$dbdata['host']." dem user: ".$dbdata['username']." und dem Passwort: ".$dbdata['password']." aufbauen");
+
+		return false;
+	}
+}
+</pre>
+			So kann bspw. der Datenbank Server umziehen oder das Passwort geändert werden, ohne im Programm müsam nach den Nutzerdaten suchen zu müssen.<br>
+			Die Klasse xsltDocument kann ausserdem mithilfe des expand Tags Konstanten für document, page oder action definieren die ohne hinzufügen zum View mit in das xml Dokument einfliessen
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;expand node="upperLevel"&gt;
+	&lt;add name="lowerLevel"&gt;Hello World&lt;/add&gt;
+&lt;/expand&gt;
+</pre>
+			Eingefügt in der Config ohne weitere Elemente aus dem View und dem returnType: xml, sendet ein xml Dokument wie:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;upperLevel&gt;
+	&lt;lowerLevel&gt;Hello World&lt;/lowerLevel&gt;
+&lt;/upperLevel&gt;
+</pre>
+		</p>
+		Die Document Klasse, phtmlDocument, ignoriert die angabe von "expand" Tags.<br>
+		<p>
+			<a name="createDocument"></a>
+			<h2>Sitemaps</h2>
+			<p>
+				In der WEB 1.0 Welt, waren Sitemaps und Breadcrum Navigationen eine musthave Information für die Benutzer.<br>
+				Aber auch heute sind Webseiten durch eine Hauptnavigation und oft Submenüs steuerbar.<br>
+				Castor erstellt beim parsen der Konfiguration automatisch ein abbild der Page und Action Struktur und stellt diese bei Bedarf über die Application Klasse zur verfügung.
+			</p>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		// Create DomDocument Object
+		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+		$domDocumentObj->preserveWhiteSpace = false;
+		$domDocumentObj->formatOutput = false;
+
+		// Add sitemap nodes
+		if($elementSitemap = $this->getSitemap(false)) {
+			$node = $domDocumentObj->importNode($elementSitemap, true);
+			$domDocumentObj->appendChild($node);
+		}
+
+		return $domDocumentObj;
+	}
+}
+</pre>
+Ein Code wie hier fordert die erstellte Sitemap als DomDocumentElement Objekt an und importiert diesen in das DomDocument Objekt.<br>
+Nach der Angabe des Attributes "title" im "page" und "action" Tag der Konfiguration:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;page title="www.xxx.de" name="home" index="welcome" return="DomDocument"&gt;
+	&lt;action title="Startseite" name="welcome"&gt;
+		&lt;style renderby="client"&gt;/styles/welcome.xsl&lt;/style&gt;
+	&lt;/action&gt;
+&lt;/page&gt;
+</pre>
+<p>Könnte der Aufruf von loadPage mit der Klasse xsltDocument, eine Ausgabe wie hier erzeugen:</p>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;sitemap&gt;
+	&lt;page active="true"&gt; &lt;name&gt;home&lt;/name&gt;
+		&lt;title&gt;www.xxx.de&lt;/title&gt;
+		&lt;index&gt;index&lt;/index&gt;
+		&lt;action active="true"&gt; &lt;title&gt;Startseite&lt;/title&gt;
+			&lt;name&gt;index&lt;/name&gt;
+			&lt;index&gt;index&lt;/index&gt;
+		&lt;/action&gt;
+	&lt;/page&gt;
+&lt;/sitemap&gt;
+</pre>
+<p>
+	Mithilfe eines Stylesheets lässt sich so eine Hauptnavigation für die gesamte Website Global definieren.<br>
+	Der Status des Attributes "active" ist abhängig von der angesteuerten Action.<br>
+	Ein Stylesheet wie:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;xsl:template match="/"&gt;
+&lt;html&gt;
+	&lt;head&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;xsl:apply-templates mactch="//sitemap" /&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+&lt;xsl:template&gt;
+
+&lt;xsl:template match="sitemap"&gt;
+	&lt;nav&gt;
+		&lt;xsl:for-each select="page"&gt;
+		&lt;a&gt;
+			&lt;xsl:attribute name="href"&gt;www.xxx.de?page=&lt;xsl:value-of select="name" /&gt;&lt;/xsl:attribute&gt;
+		&lt;/a&gt;&lt;br /&gt;
+		&lt;/xsl:for-each&gt;
+	&lt;/nav&gt;
+&lt;/xsl:template&gt;
+</pre>
+</p>
+<p>
+Könnte bspw. eine für jede Seite einheitliche Hauptnavigation zeichnen.<br>
+Ein guter Trick ist es den name der Page oder Action als Teil einer CSS Klasse zu verwenden und so für jede Seite einen Button mit bspw. einem Hintergrundbild und hover zu stylen.<br><br>
+Mit:
+<pre style="padding:5px; background-color:lightgrey;">
+$this->getSitemapArray();
+</pre>
+Kann die Sitemap auch als Array abgerufen werden und so innerhalb des Codes nutzen oder zur Rechteverwaltung genutzt werden.<br>
+Die Sitemap begründet sich nicht als Feature, hat sich bei der erstelltung von Haupt/Sub und Breadcrum Navigationen aber als nützlich erwiesen, mehr im nächsten Kapitel <a href="#pageandactions">Page & Action</a><br>
+Zusätzlich zu Elementen, kann innerhalb des "page" oder "action" Tags, mithilfe des Tags "constant" ein weiterer Wert in die Sitemap aufgenommen werden.<br>
+Dieser kann bspw. genutzt werden um Seiten im Hauptmenü zu verstecken oder zu Highlighten.
+		</p>
+		<p>
+			<a name="pageandactions"></a>
+			<h2>Page & Action</h2>
+			<p>
+				Im Insider Handbuch kann die Geschichte und die Ziele des Projekts Castor nachgelsen werden,<br>
+				an dieser Stelle sei nur gesagt das es verschiednene Itensionen gab das Projekt anzufangen.<br>
+				<!--
+				Das aufbauen einer Skeleton Applikation die in vielen Frameworks diskutiert werden muss, entspricht oft einem weiteren Zeitfaktor beim erlernen des Umgangs mit der Struktur der Website.<br>
+				Namenskonventionen müssen erlernt werden und durch alle Mitarbeiter Konsequent umgesetzt werden.<br>
+				Die Trennung von Daten durch ein Model ist oft nicht konsequent umgesetzt und komplexe Template Systeme in PHP oder JavaScript werden zur Darstellung herrangezogen.<br>
+				Das PHP schon für sich genommen ein Template System ist, wird in MVC Modellen oft mit View und Controller vermischt und in Browsern oder Modulen nativ implementierte Template Systeme,<br>
+				werden fast nie genutzt.<br>
+				Durch eine XML Konfiguration, kann sowohl ein MVC Modell beschrieben werden als auch Daten vorbereitet und Kernelemente Seitenübergreifend vordefiniert werden.<br>
+				-->
+				Der Kern des Objekt Baumes bilden Instanzen der Klassen Page und Action die, von aussen auch direkt angesprochen werden können.<br>
+				Zwar liegt der Schwerpunkt von Castor auf der Konfiguration des Objekt Baumes, aber auch händisch lassen sich Programmodelle mit diesen Klassen aufbauen.<br>
+				Im beiglegten bsp. findet man einen kurzen Code in den Kommentaren als Alternative zu minimaler Konfiguration:<br>
+				<pre style="padding:5px; background-color:lightgrey;">
+$page = new Page('home', 'index');
+$page->addFile('controller/indexController.php');
+$page->setElement('myelement', array('element' => 'Hello World'));
+$page->addAction('index', 'controller/indexController.php', 'indexAction');
+$page->loadPage('home', 'index');
+				</pre>
+				Beim Parsen der Konfiguration beschränkt sich der Kernel ähnlich wie hier auf den minimalsten Objekt Baum der nötig ist um loadPage ausführen zu können.<br>
+				Im günstigsten Fall, beschränkt sich der Kernel auf den Bsp. Code um die essentiellen Daten für den Router bereitzustellen wenn eine Action geladen wird.<br>
+				Durch die Methode addAction instanziiert das Page Objekt ein Objekt der Klasse Action und vererbt alle Variablen und Konstanten an dieses Objekt.<br>
+				Die minimale Code Basis um eine Methode im Controller aufzurufen sieht intern also aus wie etwa hier:
+				<pre style="padding:5px; background-color:lightgrey;">
+require_once('controller/simpleController.php');
+$action = new Action('impressum', 'indexController', 'impressum');
+$action->run();
+				</pre>
+				Das Attribute returnType, rendering und der "stylesheet", werden vom Doucment an Page bis Action zwar vererbt werden aber erst durch die Document Klasse mit loadPage wieder ausgewertet.<br>
+				Beim Aufruf der einzelnen Objekte wird daher keine Output Conversion stattfinden. Bei Controller Klasse die wie vorgegeben von der Application Klasse erben,<br>
+				Werden aber alle Elemente vererbt. Ein Element setzt man bspw. mit Page->setElement($name, $arr) welches beim Aufruf von addAction auf die Action vererbt wird.<br>
+				Die Intension nur das zu tun was tatsächlich angewiesen wird dadurch verdeutlicht, das auch die Klasse Action eine Methode setElement($name, $arr) behrbergt.<br>
+				Mehr dazu in der Funktionsreferenz.<br>
+			</p>
+		</p>
+		<p>
+			<a name="modules"></a>
+			<h2>AddOns, Plugins bzw. Module</h2>
+			<p>
+				Kein Programm Model kommt ohne erweiterbare Strukturen aus. Das AddOn Model von Castor setzt dem Paradigma entsprechend auf die bestmögliche Effizienz beim Einbinden und Aufrufen der AddOns.<br>
+				Um wiederkehrende Aufgaben zu modularisieren stellt Castor einige Abstrakte Klassen bereit, die sich nahtlos in den Objekt Baum einfügen und instanzen abgerufen werden können.<br>
+				Das Einfachste Model das sich findet ist die Klasse "Adapter", die eine Integration externer Bibliotheken in den Controllern ermöglichen soll.<br>
+				Da das AddOn Konzept noch relativ einfach gehalten ist, können selbst Anfänger mit einem Blick in die Datei src/adapter.php einen kurzen überblick über das Format gewinnen.<br>
+				Alle AddOn Modelle implementieren die Methode "load", eine methode "setError" sowie getError, und verlangen das implementieren einer Methode init() und erbt wie die Controller,<br>
+				von der Klasse Application. Ein einfacher Adapter könnte etwa so aussehen:
+				<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class helloWorld extends Adapter {
+	private $variables;
+
+	public function init() {
+		$this->variables = $this->getElements('variables');
+	}
+
+	public function getOutput() {
+		return $this->variables->satz;
+	}
+}
+				</pre>
+				Ein AddOn muss durch die Konfiguration im "document" Tag vorbereitet und durch den Tag "load" geladen werden.<br>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE config&gt;
+&lt;config&gt;
+	&lt;document&gt;
+		&lt;path&gt;controller&lt;/path&gt;
+		&lt;root action="welcome"&gt;home&lt;/root&gt;
+		&lt;file&gt;indexController.php&lt;/file&gt;
+		&lt;adapter name="helloWorld"&gt;
+			&lt;arr name="variables"&gt;
+				&lt;var name="satz"&gt;Dies kommt vom Adapter&lt;/var&gt;
+			&lt;/arr&gt;
+			&lt;file&gt;modules/helloworldAdapter.php&lt;/file&gt;
+			&lt;class&gt;helloWorld&lt;/class&gt;
+		&lt;/adapter&gt;
+	&lt;/document&gt;
+	&lt;sitemap&gt;
+		&lt;page name="home" index="welcome" return="DomDocument"&gt;
+			&lt;class&gt;indexController&lt;/class&gt;
+			&lt;method&gt;welcome&lt;/method&gt;
+			&lt;action name="welcome"&gt;
+				&lt;load&gt;helloWorld&lt;/load&gt;
+				&lt;style renderby="client"&gt;/styles/welcome.xsl&lt;/style&gt;
+			&lt;/action&gt;
+		&lt;/page&gt;
+	&lt;/sitemap&gt;
+&lt;/config&gt;
+</pre>
+Die Elemente respektive "arr" und "var" Tags sind für alle Instanzen des Moduls gültig und enthalten typischerweise Zugangsdaten wie Benutzernamen und Passwörter oder Variablen zum umschalten von Test auf Live Modus.<br>
+Die Elemente werden nicht wie bei "arr" Tags im "page" oder "action" Tag vererbt sondern beim Aufruf einer Action oder Page mit einem "load" Tag an die Klasse "Module" übergeben.<br>
+Die Definition des AddOns im "document" Tag nimmt also die Konfiguration auf, das Modul steht dem Controller aber nur zur verfügung, wenn für die Action ein "load" Tag vererbt wurde.<br>
+Da alle Controller die von der Klasse "Applikation" erben, kann in Modulen mit den Methoden der "Application Klasse", auf alle Vaiablen die an die instanzierende Action vererbt oder global gesetzt werden zugriff erfolgen.<br>
+Ergänzt man den "action" Tag also mit weiteren "arr" und "var" Elementen stehen diese dem Modul zur Verfügung, wenn diese innerhalb der methode der Action geladen werden.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		// Create DomDocument Object
+		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+		$domDocumentObj->preserveWhiteSpace = false;
+		$domDocumentObj->formatOutput = false;
+
+		// Add sitemap nodes
+		if($elementSitemap = $this->getSitemap(false)) {
+			$node = $domDocumentObj->importNode($elementSitemap, true);
+			$domDocumentObj->appendChild($node);
+		}
+
+		$helloWorldModule = module::get('userDB', $this);
+
+		$ausgabeNode = $domDocumentObj->createElement('ausgabe');
+		$txt = $domDocumentObj->createTextNode($helloWorldModule->getOutput());
+		$ausgabeNode->appendChild($txt);
+		$domDocumentObj->appendChild($ausgabeNode);
+
+		return $domDocumentObj;
+	}
+}
+</pre>
+System-Plugins sind zwar in Planung, können aber zurzeit nicht mit einem geeigneten Interface relaisiert werden.<br>
+Andere ADD-On Modelle werden demnächst Dokumentiert ergänzt und ausgewählte aber bereits eingesetzte stabile Module hier veröffentlicht.<br>
+Interessierte, sehen sich zu deisem Zeitpunkt bitte die Dateien adapter.php, surface.php sowie operator.php an.
+Für eine Funktionsreferenz war bisher keine Zeit, die wichtigsten finden sich in der Application Klasse und stehen somit jeder Action und jedem Modul zur Verfügung.
+			</p>
+		</p>
+	</body>
+</html>
