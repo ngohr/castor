@@ -15,7 +15,4 @@ See GitHub pages for more information.
 
 4. Configure config.xml and create a php file like example/index.php.
 
-Take care:
-
-For renderby="client" instructions take care that the stylesheet can visit up from http.
-Left config files outside from documentRoot if them contain sensible data.
+Take care and left config files outside from documentRoot if them contain sensible data.
