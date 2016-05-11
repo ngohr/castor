@@ -360,9 +360,35 @@ class Page {
 		$this->arrAction[$actionname]->addAdapter($name, $obj);
 	}
 
+	public function checkDependencys($obj) {
+		if(array_key_exists('dependency', $obj)) {
+			foreach($obj['dependency'] as $type => $modules) {
+				foreach($modules as $name) {
+					if(!module::exists($name)) {
+						switch($type) {
+							case 'surface':
+								if(!array_key_exists($name, $this->arrSurface))
+									throw new Exception("Dependency ".$name." not found!");
+								break;
+							case 'operator':
+								if(!array_key_exists($name, $this->arrSurface))
+									throw new Exception("Dependency ".$name." not found!");
+								break;
+							case 'adapter':
+								if(!array_key_exists($name, $this->arrSurface))
+									throw new Exception("Dependency ".$name." not found!");
+								break;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	public function loadAddons($actionname = false) {
-			$arrSurfaces = $this->getSurface();
+		$arrSurfaces = $this->getSurface();
 		foreach($arrSurfaces as $name => $obj) {
+			$this->checkDependencys($obj);
 			module::add($name, $obj['class'], $obj['file'], $objSurface);
 			$objSurface->setElements($obj['elements']);
 		}
@@ -370,20 +396,23 @@ class Page {
 		if($actionname) {
 			$arrSurfaces = $this->arrAction[$actionname]->getSurface();
 			foreach($arrSurfaces as $name => $obj) {
+				$this->checkDependencys($obj);
 				module::add($name, $obj['class'], $obj['file'], $objSurface);
 				$objSurface->setElements($obj['elements']);
 			}
 		}
 
-			$arrOperator = $this->getOperator();
+		$arrOperator = $this->getOperator();
 		foreach($arrOperator as $name => $obj) {
+			$this->checkDependencys($obj);
 			module::add($name, $obj['class'], $obj['file'], $objOperator);
 			$objOperator->setElements($obj['elements']);
 		}
-		
+
 		if($actionname) {
 			$arrOperator = $this->arrAction[$actionname]->getOperator();
 			foreach($arrOperator as $name => $obj) {
+				$this->checkDependencys($obj);
 				module::add($name, $obj['class'], $obj['file'], $objOperator);
 				$objOperator->setElements($obj['elements']);
 			}
@@ -391,13 +420,15 @@ class Page {
 
 		$arrAdapter = $this->getAdapter();
 		foreach($arrAdapter as $name => $obj) {
+			$this->checkDependencys($obj);
 			module::add($name, $obj['class'], $obj['file'], $objAdapter);
 			$objAdapter->setElements($obj['elements']);
 		}
-		
+
 		if($actionname) {
 			$arrAdapter = $this->arrAction[$actionname]->getAdapter();
 			foreach($arrAdapter as $name => $obj) {
+				$this->checkDependencys($obj);
 				module::add($name, $obj['class'], $obj['file'], $objAdapter);
 				$objAdapter->setElements($obj['elements']);
 			}
@@ -454,7 +485,6 @@ class Page {
 		$objAction = $this->arrAction[$action];
 
 		$objAction->setPagename($this->getName());
-
 		if($this->getSitemap())
 			$objAction->setSitemap($this->getSitemap());
 

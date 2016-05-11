@@ -51,16 +51,14 @@ abstract class Operator extends Application {
 			if($actionName)
 				$this->setActionname($actionName);
 		}
-	
+
 		$this->setSitemap($instance->getSitemapAttribute());
-	
+
 		if(!$this->init()) {
-			$this->setError('Init Operator failed');
-	
-			return false;
+			throw new Exception($this->getError());
 		}
-	
-		return $this;
+
+		return true;
 	}
 
 	public function add($name) {

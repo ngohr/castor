@@ -26,8 +26,7 @@ abstract class Surface extends Application {
 	public $error = false;
 
 	abstract function init();
-	abstract function connect();
-	abstract function &get();
+	abstract function &connect();
 	abstract function close();
 	abstract function reset();
 
@@ -57,8 +56,12 @@ abstract class Surface extends Application {
 				$this->setActionname($actionName);
 		}
 
-		$this->init();
+		$this->setSitemap($instance->getSitemapAttribute());
 
-		return $this;
+		if(!$this->init()) {
+			throw new Exception($this->getError());
+		}
+
+		return true;
 	}
 }

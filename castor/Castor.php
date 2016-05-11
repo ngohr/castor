@@ -213,6 +213,21 @@ abstract class Castor {
 						unset($arr);
 					}
 				}
+
+				// Load Dependencys
+				$this->surface[$surfaceName]['dependency'] = array();
+				$dependencyNodes = $xpath->query("dependency", $node);
+				if($dependencyNodes && $dependencyNodes->length > 0) {
+					$this->surface['dependency'] = array();
+					for($e = 0; $e < $dependencyNodes->length; $e++) {
+						$item = $dependencyNodes->item($e);
+						$name = $item->nodeValue;
+						$type = $item->getAttribute('type');
+						if(!array_key_exists($type, $this->surface[$surfaceName]['dependency']))
+							$this->surface[$surfaceName]['dependency'][$type] = array();
+						$this->surface[$surfaceName]['dependency'][$type][] = $name;
+					}
+				}
 			}
 		}
 
@@ -275,6 +290,21 @@ abstract class Castor {
 						unset($arr);
 					}
 				}
+
+				// Load Dependencys
+				$this->operator[$operatorName]['dependency'] = array();
+				$dependencyNodes = $xpath->query("dependency", $node);
+				if($dependencyNodes && $dependencyNodes->length > 0) {
+					$this->operator['dependency'] = array();
+					for($e = 0; $e < $dependencyNodes->length; $e++) {
+						$item = $dependencyNodes->item($e);
+						$name = $item->nodeValue;
+						$type = $item->getAttribute('type');
+						if(!array_key_exists($type, $this->operator[$operatorName]['dependency']))
+							$this->operator[$operatorName]['dependency'][$type] = array();
+						$this->operator[$operatorName]['dependency'][$type][] = $name;
+					}
+				}
 			}
 		}
 
@@ -335,6 +365,21 @@ abstract class Castor {
 						$this->adapter[$adapterName]['elements'][$arrname] = $arr;
 							
 						unset($arr);
+					}
+				}
+
+				// Load Dependencys
+				$this->adapter[$adapterName]['dependency'] = array();
+				$dependencyNodes = $xpath->query("dependency", $node);
+				if($dependencyNodes && $dependencyNodes->length > 0) {
+					$this->adapter['dependency'] = array();
+					for($e = 0; $e < $dependencyNodes->length; $e++) {
+						$item = $dependencyNodes->item($e);
+						$name = $item->nodeValue;
+						$type = $item->getAttribute('type');
+						if(!array_key_exists($type, $this->adapter[$adapterName]['dependency']))
+							$this->adapter[$adapterName]['dependency'][$type] = array();
+						$this->adapter[$adapterName]['dependency'][$type][] = $name;
 					}
 				}
 			}

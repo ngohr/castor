@@ -3,18 +3,24 @@
 /*
  * castors module Class
  * 
- * - class module provides a static singleton pattern to save constructed Modules, defined in configuration files.
- * - Typical castor modules provides a relation to a given connection or a data instance.
+ * - class module provides a static singleton pattern to add constructed Modules once -> The <load> Tag defined in configuration files.
+ * - Typical castor modules provides a relation to a given connection or a data instance
  * - Modules are named from config constants, but they typically provide a key to get multiple data loaded from the instance.
- *   Also, modules will be loaded by getting a named object and abstract a given collection of named data models.
- *   
+ * - ELements from definitions are added while the page loaded all modules with a load tag for the action
+ * - Also, modules will be loaded by getting a named object and abstract a given collection of named data models.
+ * 
+ * [NOTE] module::get does not add a new instance but overwrites the loaded elements with elements from $instance.
+ *        typical if(isnull) singleton patterns must be implemented in the getter functions of the module.
+ *        constructors of the custom modules are called on page load deconstructors after page load.
+ *        The onReady Hook calls after all elements and values from instance was set and init() was called. It takes parameters from get()
+ *
  * @todos
  * 
  * #001 Data Models shouldt be a difently clean collection of abstract classes and it must be an experimental features for years of testing.
  * 
  * @version
  *
- * 0.4 / 27.09.2013
+ * 0.9 / 04.05.2016
  *
  * @author
  *
@@ -25,6 +31,7 @@
 class module {
 	static $arrModules = array();
 
+	// Only files for defined modules with a load tag in the page or document will included once...
 	static function addFile($filename) {
 		if(!file_exists($filename)) {
 			return false;
@@ -35,6 +42,7 @@ class module {
 		return true;
 	}
 
+	// Only the first module of given load tags will added to $arrModules, elements will set only if the module will provided by get()
 	static function add($name, $classname, $file, &$obj) {
 		if(!self::addFile($file)) {
 			throw new Exception('File '.$file.' not found!');
@@ -48,18 +56,37 @@ class module {
 		return true;
 	}
 
-	static function get($name, $instance) {
+	// Get a reference of the defined module and set all elements of the definition and given instance
+	static function &get($name, $instance) {
+		$args = func_num_args();
+		if($args < 2) {
+			throw new Exception("Not enough arguments for module::get");
+		}
+
+		$arrArgs = func_get_args();
+
+		$params = array();
+		for($i = 2; $i < count($arrArgs); $i++) {
+			$params[] = $arrArgs[$i];
+		}
+
 		if(!array_key_exists($name, self::$arrModules)) {
 			throw new Exception('Module '.$name.' not found!');
 		}
 
-		return self::$arrModules[$name]->load($instance);
+		self::$arrModules[$name]->load($instance);
+
+		if(method_exists(self::$arrModules[$name], "onReady"))
+			call_user_func_array(array(self::$arrModules[$name], "onReady") , $params);
+
+		return self::$arrModules[$name];
 	}
 
+	// If a module exists
 	static function exists($name) {
 		if(array_key_exists($name, self::$arrModules))
 			return true;
 
 		return false;
 	}
-}	
+}

@@ -12,7 +12,6 @@
  * 
  * #001 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
  * #003 implement compress output for return 'file' actions
- * #004 Return Json as application/json, but thats not interoperable...
  * 
  * @author
  * 
@@ -145,29 +144,15 @@ class xsltDocument extends Document {
 
 		$objPage->loadAddons($action);
 
+		// relates #002 - Returntype json and xml is not an individual for text/html
 		switch($returnType) {
-			case 'DomDocument':
-				// Import the node, and all its children, to the document
-				$returnvalue = $objPage->call($action);
-				if($returnvalue) {
-					foreach($returnvalue->childNodes as $sibling) {
-						$node = $this->domDocumentPage->importNode($sibling, true);
-						$this->root->appendChild($node);
-					}
-
-					$expand = $objPage->getLocalNodes($action);
-					$this->expandNodes($objPage, $action);
-				}
-
-				break;
-
 			case 'Array':
 				// Contruct DomDocument Elements from a given array, returned from $objPage->call($action);
 				$returnvalue = $objPage->call($action);
 	
 				if($returnvalue && is_array($returnvalue)) {
-					elements::createElementRepresentation($returnvalue, $this->domDocumentPage, $this->root);
-	
+					if(!elements::createElementRepresentation($returnvalue, $this->domDocumentPage, $this->root))
+						throw new Exception(elements::getError());
 					$this->expandNodes($objPage, $action);
 				}
 
@@ -189,27 +174,6 @@ class xsltDocument extends Document {
 
 				return true;
 
-				break;
-
-			case 'xml':
-				// Import the node, and all its children, to the document
-				$returnvalue = $objPage->call($action);
-				if($returnvalue) {
-					foreach($returnvalue->childNodes as $sibling) {
-						$node = $this->domDocumentObj->importNode($sibling, true);
-						$this->root->appendChild($node);
-					}
-			
-					$this->expandNodes($objPage, $action);
-				}
-			
-				header('Content-type: text/xml; charset=UTF-8');
-					
-				$this->domDocumentObj->appendChild($this->root);
-				$this->domDocumentObj->save('php://output');
-			
-				return true;
-					
 				break;
 
 			case 'json':
@@ -260,84 +224,65 @@ class xsltDocument extends Document {
 
 				break;
 
+			case 'DomDocument':
 			default:
 				// Import the node, and all its children, to the document
 				$returnvalue = $objPage->call($action);
 				if($returnvalue) {
-					foreach($returnvalue->childNodes as $sibling) {
-						$node = $this->domDocumentPage->importNode($sibling, true);
-						$this->root->appendChild($node);
+					try {
+						foreach($returnvalue->childNodes as $sibling) {
+							$node = $this->domDocumentPage->importNode($sibling, true);
+							$this->root->appendChild($node);
+						}
+					} catch(DOMException $exeption) {
+						die(var_dump($exeption->getMessage()));
 					}
 				
 					$expand = $objPage->getLocalNodes($action);
 					$this->expandNodes($objPage, $action);
 				}
-				
 				break;
 		}
 
-		// A redering-type isnt mandatory, if no stylesheet was given, relates #006
 		$rendertype = $objPage->getRendering($action);
-		if($rendertype) {
-			switch($rendertype) {
-				case 'client':
-					$stylesheet = $objPage->getStylesheet($action);
-	
-					if(!empty($stylesheet)) {
-						$xslt = $this->domDocumentPage->createProcessingInstruction(
-							'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
-						);
-	
-						$this->domDocumentPage->appendChild($xslt);
-						$this->domDocumentPage->appendChild($this->root);
-					} else {
-						return false;
-					}
-		
-					$this->domDocumentPage->appendChild($this->root);
-		
-					$this->sendXml();
-		
-					break;
-		
-				case 'server':
-					$this->domDocumentPage->appendChild($this->root);
-					$stylesheet = $objPage->getStylesheet($action);
-	
-					$this->sendHTML($stylesheet);
-		
-					break;
-	
-				// relates todo #002
-				case 'xml':
-					header('Content-type: text/xml; charset=UTF-8');
-		
-					$this->domDocumentPage->appendChild($this->root);
-					$this->domDocumentPage->save('php://output');
-		
-					break;
-						
-				default:
-					$stylesheet = $objPage->getStylesheet($action);
-					if(!empty($stylesheet)) {
-						$xslt = $this->domDocumentPage->createProcessingInstruction(
-								'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
-						);
+		switch($rendertype) {
+			case 'client':
+				$stylesheet = $objPage->getStylesheet($action);
 
-						$this->domDocumentPage->appendChild($xslt);
-						$this->domDocumentPage->appendChild($this->root);
-					} else {
-						return false;
-					}
-		
+				if(!empty($stylesheet)) {
+					$xslt = $this->domDocumentPage->createProcessingInstruction(
+						'xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"'
+					);
+
+					$this->domDocumentPage->appendChild($xslt);
 					$this->domDocumentPage->appendChild($this->root);
-		
-					$this->sendXml();
-		
-					break;
-			}
-		}
+				} else {
+					return false;
+				}
 	
+				$this->domDocumentPage->appendChild($this->root);
+	
+				$this->sendXml();
+	
+				break;
+	
+			case 'server':
+				$this->domDocumentPage->appendChild($this->root);
+				$stylesheet = $objPage->getStylesheet($action);
+
+				$this->sendHTML($stylesheet);
+	
+				break;
+
+			default:
+				header('Content-type: text/xml; charset=UTF-8');
+	
+				$this->domDocumentPage->appendChild($this->root);
+				$this->sendXml();
+	
+				break;
+		}
+
 		return true;
 	}
 
@@ -353,9 +298,9 @@ class xsltDocument extends Document {
 		} else {
 			header('Content-type: text/xml; charset=UTF-8');
 		}
-	
+
 		$this->domDocumentPage->save('php://output');
-	
+
 		return true;
 	}
 

@@ -44,7 +44,6 @@ abstract class Document extends Castor {
 		}
 
 		$objPage = new Page($pagename, $index);
-
 		$returnTyp = $pagenode->getAttribute('return');
 		if($returnTyp && $returnTyp != '') {
 			$objPage->setReturnTyp($returnTyp);
@@ -189,7 +188,6 @@ abstract class Document extends Castor {
 	public function createActions($pagename, $pagenode, $actionname = false) {
 		if($this->pageExists($pagename))
 			throw new Exception("Page: ".$pagename." is not inimitable!");
-
 		if(!$this->createPage($pagename, $pagenode))
 			throw new Exception("Fatal Error: Cannot create ".$pagename);
 
