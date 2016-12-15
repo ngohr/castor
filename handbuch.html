@@ -511,7 +511,7 @@ Nach der Angabe des Attributes "title" im "page" und "action" Tag der Konfigurat
 	&lt;head&gt;
 	&lt;/head&gt;
 	&lt;body&gt;
-		&lt;xsl:apply-templates mactch="//sitemap" /&gt;
+		&lt;xsl:apply-templates match="//sitemap" /&gt;
 	&lt;/body&gt;
 &lt;/html&gt;
 &lt;xsl:template&gt;
@@ -534,7 +534,7 @@ Mit:
 <pre style="padding:5px; background-color:lightgrey;">
 $this->getSitemapArray();
 </pre>
-Kann die Sitemap auch als Array abgerufen werden und so innerhalb des Codes nutzen oder zur Rechteverwaltung genutzt werden.<br>
+Kann die Sitemap auch als Array abgerufen werden und so innerhalb des Codes z.B. zur Rechteverwaltung genutzt werden.<br>
 Die Sitemap begründet sich nicht als Feature, hat sich bei der erstelltung von Haupt/Sub und Breadcrum Navigationen aber als nützlich erwiesen, mehr im nächsten Kapitel <a href="#pageandactions">Page & Action</a><br>
 Zusätzlich zu Elementen, kann innerhalb des "page" oder "action" Tags, mithilfe des Tags "constant" ein weiterer Wert in die Sitemap aufgenommen werden.<br>
 Dieser kann bspw. genutzt werden um Seiten im Hauptmenü zu verstecken oder zu Highlighten.
@@ -553,7 +553,7 @@ Dieser kann bspw. genutzt werden um Seiten im Hauptmenü zu verstecken oder zu H
 				werden fast nie genutzt.<br>
 				Durch eine XML Konfiguration, kann sowohl ein MVC Modell beschrieben werden als auch Daten vorbereitet und Kernelemente Seitenübergreifend vordefiniert werden.<br>
 				-->
-				Der Kern des Objekt Baumes bilden Instanzen der Klassen Page und Action die, von aussen auch direkt angesprochen werden können.<br>
+				Den Kern des Objekt Baumes bilden Instanzen der Klassen Page und Action die, von aussen auch direkt angesprochen werden können.<br>
 				Zwar liegt der Schwerpunkt von Castor auf der Konfiguration des Objekt Baumes, aber auch händisch lassen sich Programmodelle mit diesen Klassen aufbauen.<br>
 				Im beiglegten bsp. findet man einen kurzen Code in den Kommentaren als Alternative zu minimaler Konfiguration:<br>
 				<pre style="padding:5px; background-color:lightgrey;">
@@ -563,13 +563,13 @@ $page->setElement('myelement', array('element' => 'Hello World'));
 $page->addAction('index', 'controller/indexController.php', 'indexAction');
 $page->loadPage('home', 'index');
 				</pre>
-				Beim Parsen der Konfiguration beschränkt sich der Kernel ähnlich wie hier auf den minimalsten Objekt Baum der nötig ist um loadPage ausführen zu können.<br>
-				Im günstigsten Fall, beschränkt sich der Kernel auf den Bsp. Code um die essentiellen Daten für den Router bereitzustellen wenn eine Action geladen wird.<br>
+				Beim Parsen der Konfiguration beschränkt sich der Kern ähnlich wie hier auf den minimalsten Objekt Baum der nötig ist um loadPage ausführen zu können.<br>
+				Im günstigsten Fall, beschränkt sich der Kern auf den bsp. Code um die essentiellen Daten für den Router bereitzustellen wenn eine Action geladen wird.<br>
 				Durch die Methode addAction instanziiert das Page Objekt ein Objekt der Klasse Action und vererbt alle Variablen und Konstanten an dieses Objekt.<br>
 				Die minimale Code Basis um eine Methode im Controller aufzurufen sieht intern also aus wie etwa hier:
 				<pre style="padding:5px; background-color:lightgrey;">
 require_once('controller/simpleController.php');
-$action = new Action('impressum', 'indexController', 'impressum');
+$action = new Action('impressum', 'indexController.php', 'impressum');
 $action->run();
 				</pre>
 				Das Attribute returnType, rendering und der "stylesheet", werden vom Doucment an Page bis Action zwar vererbt werden aber erst durch die Document Klasse mit loadPage wieder ausgewertet.<br>
@@ -583,7 +583,7 @@ $action->run();
 			<a name="modules"></a>
 			<h2>AddOns, Plugins bzw. Module</h2>
 			<p>
-				Kein Programm Model kommt ohne erweiterbare Strukturen aus. Das AddOn Model von Castor setzt dem Paradigma entsprechend auf die bestmögliche Effizienz beim Einbinden und Aufrufen der AddOns.<br>
+				Kein Programm Model kommt ohne erweiterbare Strukturen aus. Das AddOn Model von Castor setzt dem Paradigma entsprechend, auf die bestmögliche Effizienz beim Einbinden und Aufrufen der AddOns.<br>
 				Um wiederkehrende Aufgaben zu modularisieren stellt Castor einige Abstrakte Klassen bereit, die sich nahtlos in den Objekt Baum einfügen und instanzen abgerufen werden können.<br>
 				Das Einfachste Model das sich findet ist die Klasse "Adapter", die eine Integration externer Bibliotheken in den Controllern ermöglichen soll.<br>
 				Da das AddOn Konzept noch relativ einfach gehalten ist, können selbst Anfänger mit einem Blick in die Datei src/adapter.php einen kurzen überblick über das Format gewinnen.<br>
@@ -595,7 +595,9 @@ class helloWorld extends Adapter {
 	private $variables;
 
 	public function init() {
-		$this->variables = $this->getElements('variables');
+		$this->variables = (object) $this->getElements('variables');
+
+		return true;
 	}
 
 	public function getOutput() {
@@ -635,7 +637,7 @@ class helloWorld extends Adapter {
 Die Elemente respektive "arr" und "var" Tags sind für alle Instanzen des Moduls gültig und enthalten typischerweise Zugangsdaten wie Benutzernamen und Passwörter oder Variablen zum umschalten von Test auf Live Modus.<br>
 Die Elemente werden nicht wie bei "arr" Tags im "page" oder "action" Tag vererbt sondern beim Aufruf einer Action oder Page mit einem "load" Tag an die Klasse "Module" übergeben.<br>
 Die Definition des AddOns im "document" Tag nimmt also die Konfiguration auf, das Modul steht dem Controller aber nur zur verfügung, wenn für die Action ein "load" Tag vererbt wurde.<br>
-Da alle Controller die von der Klasse "Applikation" erben, kann in Modulen mit den Methoden der "Application Klasse", auf alle Vaiablen die an die instanzierende Action vererbt oder global gesetzt werden zugriff erfolgen.<br>
+Da alle Module wie Controller von der Klasse "Application" erben, kann in Modulen mit den Methoden der "Application Klasse", auf alle Variablen die an die instanzierende Action vererbt oder global gesetzt werden zugegriffen werden.<br>
 Ergänzt man den "action" Tag also mit weiteren "arr" und "var" Elementen stehen diese dem Modul zur Verfügung, wenn diese innerhalb der methode der Action geladen werden.
 <pre style="padding:5px; background-color:lightgrey;">
 &lt;?php
@@ -652,7 +654,7 @@ class indexController extends Application {
 			$domDocumentObj->appendChild($node);
 		}
 
-		$helloWorldModule = module::get('userDB', $this);
+		$helloWorldModule = module::get('helloWorld', $this);
 
 		$ausgabeNode = $domDocumentObj->createElement('ausgabe');
 		$txt = $domDocumentObj->createTextNode($helloWorldModule->getOutput());
@@ -663,11 +665,227 @@ class indexController extends Application {
 	}
 }
 </pre>
-System-Plugins sind zwar in Planung, können aber zurzeit nicht mit einem geeigneten Interface relaisiert werden.<br>
-Andere ADD-On Modelle werden demnächst Dokumentiert ergänzt und ausgewählte aber bereits eingesetzte stabile Module hier veröffentlicht.<br>
-Interessierte, sehen sich zu deisem Zeitpunkt bitte die Dateien adapter.php, surface.php sowie operator.php an.
-Für eine Funktionsreferenz war bisher keine Zeit, die wichtigsten finden sich in der Application Klasse und stehen somit jeder Action und jedem Modul zur Verfügung.
+Die Methode init() im Adapter, muss true zurückgeben, andernfallse wird eine Exception den Inhalt von application->getError() auswerfen.<br>
+Sollten bspw. essentielle Parameter nicht definiert worden sein, kann mit setError() ein Fehler gesetzt werden und schon in init() der Aufruf des Moduls verhindert werden.<br>
+Seid Version 1.0 Stable steht ist es möglich auch im Programmcode Parameter entegenzunehmen.<br>
+Adapter implementieren hierzu die Methode "onReady":
+				<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class helloWorld extends Adapter {
+	private $variables;
+	private $param = "Not set";
+
+	public function init() {
+		$this->variables = (object) $this->getElements('variables');
+	}
+
+	public function onReady($meinParameter = false) {
+		if($meinParameter) {
+			$this->param = $meinParameter;
+		}
+
+		return true;
+	}
+
+	public function getOutput() {
+		return $this->variables->satz." ".$this->param;
+	}
+}
+				</pre>
+				Wird das Modul nun wie folgt geladen, wird der Parameter mit in die Ausgabe übernommen:
+				<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		// Create DomDocument Object
+		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+		$domDocumentObj->preserveWhiteSpace = false;
+		$domDocumentObj->formatOutput = false;
+
+		// Add sitemap nodes
+		if($elementSitemap = $this->getSitemap(false)) {
+			$node = $domDocumentObj->importNode($elementSitemap, true);
+			$domDocumentObj->appendChild($node);
+		}
+
+		$helloWorldModule = module::get('helloWorld', $this, "Meine neue Ausgabe");
+
+		$ausgabeNode = $domDocumentObj->createElement('ausgabe');
+		$txt = $domDocumentObj->createTextNode($helloWorldModule->getOutput());
+		$ausgabeNode->appendChild($txt);
+		$domDocumentObj->appendChild($ausgabeNode);
+
+		return $domDocumentObj;
+	}
+}
+				</pre>
+				Jeder Parameter grö&szlig;er dem 3. von module::get() wird direkt an die Methode onReady übergeben nachdem init() erfolgreich durch die Klasse "module" aufgerufen wurde.<br>
+				Sollten mehr Parameter angegeben werden als onReady aufnehmen will, werden diese ignoriert!
 			</p>
 		</p>
+		<p>
+			<h2>Plugins</h2>
+			<p>
+				Erste Plugins wurden als Module realisiert die ihrerseits grundlegende Funktionen implementieren und durch vererben zur verfügung stellen.
+				Plugins werden Manuell im Programm eingebunden, so wird auch hier sichergestellt das nur benötigte Funktionen abgelegt und interpretiert werden müssen.
+				Im Ordner Plugins findet man zu diesem Zeitpunkt ein Plugin zum session Management in PHP. Typische Sicherheitsmaßnahmen und Techniken aus den unterschiedlichsten Quellen wurden hierfür gesammelt.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+define("RESET_CONFIG", true);
+
+abstract class sessionManagement extends Operator {
+	public $rights;
+	private $token = false;
+	private $hashAlgorythm = 'md5';
+	private $constants;
+	private $lastSessionId;
+
+	public $fixRemoteAddr = false;
+	public $fixUserAgent = false;
+	public $maxLivetime = false;
+	public $forwardSecrecy = false;
+	public $sessionTimeoutSec = 1440;
+
+	public $helpText = "The Plugin sessionManagement, opens a session on init and respects common security behaivors! Typical constants of the PHP installation will overwriten on init, set constant RESET_CONFIG to false to skip that.";
+	public $helpParameters = array(
+		'constants' => array(
+			'fixremoteaddr' => "If 'yes', the session will destroyed, if the REMOTE_ADDR was changed. Mobile connections couldt ran into it!",
+			'fixuseragent' => "If 'yes', the session will destroyed, if the HTTP_USER_AGENT header was changed. Mobile browsers changes his header with functions like: show desktop version and couldt ran into it!",
+			'maxlifetime' => "If 'yes', a sessionId will regenerated after session.gc_maxlifetime in seconds",
+			'forwardsecrecy' => "If 'yes', the available hash algorythms of the php installation will searched through the strongest sha encryption to use for the session. Not available on PHP >= 7.1"
+		)
+	);
+
+	public $helpMethods = array(
+		'session_started' => "check if a session was started, parameters: none",
+		'session_save_start' => "recreates a sessions with known constants set, parameters: none",
+		'session_destroy' => "unset session variables, session cookies and destroyes the session on server side, parameters: none"
+	);
+
+	public function init() {
+		if(ini_get('session.gc_maxlifetime') > 0)
+			$this->sessionTimeoutSec = ini_get('session.gc_maxlifetime');
+		$this->constants = (object) $this->getElements('constants');
+
+		if($this->constants) {
+			if(isset($this->constants->fixremoteaddr) && $this->constants->fixremoteaddr == 'yes')
+				$this->fixRemoteAddr = true;
+	.....
+</pre>
+				Plugins unterscheiden sich in keinster Weise von Modulen, sollten aber die abstracten Methoden, des Modul Typs selbst implementieren.<br>
+				Wie oben zusehen erbt die Klasse vom Modul Typ Operator (Anm. der wohl als erstes wieder rausfliegt)<br>
+				Die Grundlegend essentielle und einheitliche Methode für Module ist die Methode init()!<br>
+				Da alle Module wie Controller von der Klasse "Application" Erben steht vor allem hier auch die Methode $this->getElements() zur verfügung.<br>
+				Das Plugin prüft den arr Tag "constants" der Definition und übernimmt die Parameter für spätere Funktionen.<br>
+				Um auch dritten die Veröffentlichung von Plugins zu ermöglichen, kann im oberen Teil in namentlich fetgehaltenen Variablen das grundlegende Verhalten dokumentiert werden.<br>
+				Die Dokumentation der Klasse mit $helpText, $helpParameters, und $helpMethods ist kein Musthave und muss sich bewähren, aber es sollte eine brauchbare Ergänzung sein,<br>
+				wenn dritte ein Plugin veröffentlichen.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+die(module::help('moduleName'));
+</pre>
+				Gibt die oben definierten Variablen formatiert aus und beschreibt so seine Funktion, die Methoden die zur verf&uuml;gung stehen und die Parameter die gesetzt werden k&ouml;nnen / m&uuml;ssen.<br>
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+require_once('Castor.php');
+require_once('plugins/sessionManagement.php');
+try {
+	$document = new xsltDocument();
+	$document->loadPage();
+} catch(Exception $exeption) {
+	die($exeption->getMessage());
+}
+</pre>
+				Erlaubt es natürlich von der Eingebundenen Klasse die als Modul entworfen wurde zu erben und ein eigenes kleineres Modul zu schreiben.
+				Ein Modul wie dieses, nehmen wir an in userManagement.php implementiert:
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+class userManagement extends sessionManagement {
+	private $username;
+	private $userpassword;
+
+	public function onReady() {
+		$logindata = (object) $this->getElements('loginData');
+		$this->username = $logindata->user;
+		$this->userpassword = $logindata->password;
+	}
+
+	public function login($name, $password) {
+		if($name == $this->username && $password == $this->userpassword)
+			die("Hurray iam loggedIn")
+	}
+
+	public function onRegenerate($session_id) {
+		trigger_error("SessionID regenarated to ".session_id());
+	}
+}
+
+</pre>
+				Module die von Plugins ableiten sollen natürlich keine eigene Methode init() implementieren.<br>
+				Anstatt dessen könnten Plugins das implementieren einer Methode, wie onRegenrate() erlauben.<br>
+				Das Plugin führt diese immer aus wenn die SessionID erneuert wird.<br>
+				Das übergeben von Parametern an onReady sollten Plugins allerdings dem Programmierer des Moduls überlassen.<br>
+				Nur über diese Funktion und individuelle Elemente die der Action vererbt werden, kann der Programmierer sein Modul implizit mit dynamischen Variablen aufrufen.
+<pre style="padding:5px; background-color:lightgrey;">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE config&gt;
+&lt;config&gt;
+	&lt;document&gt;
+		&lt;path&gt;controller&lt;/path&gt;
+		&lt;root action="welcome"&gt;home&lt;/root&gt;
+		&lt;file&gt;indexController.php&lt;/file&gt;
+		&lt;operator name="usermng"&gt;
+			&lt;arr name="constants"&gt;
+				&lt;var name="forwardsecrecy"&gt;yes&lt;/var&gt;
+			&lt;/arr&gt;
+			&lt;file&gt;modules/userManagement.php&lt;/file&gt;
+			&lt;class&gt;userManagement&lt;/class&gt;
+		&lt;/operator&gt;
+	&lt;/document&gt;
+	&lt;sitemap&gt;
+		&lt;page name="home" index="welcome"&gt;
+			&lt;class&gt;indexController&lt;/class&gt;
+			&lt;method&gt;welcome&lt;/method&gt;
+			&lt;action name="welcome"&gt;
+				&lt;arr name="loginData"&gt;
+					&lt;var name="user"&gt;test&lt;/var&gt;
+					&lt;var name="password"&gt;test&lt;/var&gt;
+				&lt;/arr&gt;
+				&lt;load&gt;usermng&lt;/load&gt;
+			&lt;/action&gt;
+		&lt;/page&gt;
+	&lt;/sitemap&gt;
+&lt;/config&gt;
+</pre>
+				Die Konfiguration hier definiert das Modul userManagement das wie oben zu sehen vom Plugin sessionManagement erbt.<br>
+				Ohne die Funktionen des Plugins genauer zu nennen sei gesagt das session_start() zu diesem Zeitpunkt schon ausgeführt wurde.<br>
+				Ein Controller Code wie hier:
+				<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+class indexController extends Application {
+	public function welcome() {
+		// Create DomDocument Object
+		$domDocumentObj = new DOMDocument('1.0', 'UTF-8');
+		$domDocumentObj->preserveWhiteSpace = false;
+		$domDocumentObj->formatOutput = false;
+
+		echo module::help('usermng');
+		$userMngModule = module::get('usermng', $this);
+		$userMngModule->login('test', 'test');
+
+		return false;
+	}
+}
+				</pre>
+Würde zunächst den Hilfetext des Plugins sessionManagement ausgeben und dann in der Methode des Logins unterbrechen und "Hurray iam loggedIn" ausgeben.<br><br>
+			</p>
+		</p>
+		<h2>Abhängigkeiten</h2>
+		<p>Neu implementiert wurden zudem die sog. dependecys, und Hooks für Plugins für eine Dokumentation war noch keine Zeit.</p>
+		Die Implementation von letzterem können interessierte sich gern einmal in plugins/fileCompressed.php ansehen.
 	</body>
 </html>
