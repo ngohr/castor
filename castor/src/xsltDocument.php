@@ -144,6 +144,8 @@ class xsltDocument extends Document {
 
 		$objPage->loadAddons($action);
 
+		$returnTypeHooks = hooks::getHooks('returnType');
+
 		// relates #002 - Returntype json and xml is not an individual for text/html
 		switch($returnType) {
 			case 'Array':
@@ -183,14 +185,18 @@ class xsltDocument extends Document {
 				if(!$action) {
 					$send = array();
 					foreach($objPage->load() as $index => $value) {
+						if(!$value)
+							break;
 						$send[$index][] = $value;
 					}
 					echo json_encode($send);
 				} else {
-					echo json_encode($objPage->call($action));
+					$send = $objPage->call($action);
+					echo json_encode($send);
 				}
 
-				ob_end_flush();
+				if((!is_array($send) && $send) || (is_array($send) && count($send) > 0))
+					ob_end_flush();
 
 				return true;
 
@@ -200,7 +206,8 @@ class xsltDocument extends Document {
 				$returnvalue = $objPage->call($action);
 				if($returnvalue) {
 					ob_start();
-	
+					header('Content-Type: text/html; charset=UTF-8');
+
 					$stylesheet = $objPage->getStylesheet($action);
 					$handle = @fopen($stylesheet, "r");
 					if($handle) {
@@ -216,7 +223,6 @@ class xsltDocument extends Document {
 						throw new Exception("Fatal Error: cannot open ".$stylesheet);
 					}
 	
-					header('Content-Type: text/html; charset=UTF-8');
 					ob_end_flush();
 	
 					return true;
@@ -225,7 +231,6 @@ class xsltDocument extends Document {
 				break;
 
 			case 'DomDocument':
-			default:
 				// Import the node, and all its children, to the document
 				$returnvalue = $objPage->call($action);
 				if($returnvalue) {
@@ -241,6 +246,18 @@ class xsltDocument extends Document {
 					$expand = $objPage->getLocalNodes($action);
 					$this->expandNodes($objPage, $action);
 				}
+				break;
+
+			default:
+				ob_start();
+				if($returnTypeHooks) {
+					foreach($returnTypeHooks as $hookName => $values) {
+						if($returnType == $hookName) {
+							$values['callback']($objPage, $action);
+						}
+					}
+				}
+				ob_end_flush();
 				break;
 		}
 
@@ -275,10 +292,11 @@ class xsltDocument extends Document {
 				break;
 
 			default:
-				header('Content-type: text/xml; charset=UTF-8');
-	
-				$this->domDocumentPage->appendChild($this->root);
-				$this->sendXml();
+				if($returnType == "DomDocument") {
+					header('Content-type: text/xml; charset=UTF-8');
+					$this->domDocumentPage->appendChild($this->root);
+					$this->sendXml();
+				}
 	
 				break;
 		}

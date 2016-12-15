@@ -56,12 +56,12 @@ abstract class Surface extends Application {
 				$this->setActionname($actionName);
 		}
 
-		$this->setSitemap($instance->getSitemapAttribute());
-
 		if(!$this->init()) {
 			throw new Exception($this->getError());
+	
+			return false;
 		}
 
-		return true;
+		return $this;
 	}
 }

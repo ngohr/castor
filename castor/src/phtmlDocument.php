@@ -200,7 +200,7 @@ class phtmlDocument extends Document {
 						View::Add($index, $arr[$index]);
 					}
 				}
-				
+
 				break;
 		}
 

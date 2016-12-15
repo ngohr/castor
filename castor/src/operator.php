@@ -51,14 +51,14 @@ abstract class Operator extends Application {
 			if($actionName)
 				$this->setActionname($actionName);
 		}
-
+	
 		$this->setSitemap($instance->getSitemapAttribute());
-
 		if(!$this->init()) {
 			throw new Exception($this->getError());
+
 		}
 
-		return true;
+		return $this;
 	}
 
 	public function add($name) {
@@ -333,7 +333,7 @@ abstract class Operator extends Application {
 				$this->set($name, array());
 			}
 		}
-
+		
 		$result->close();
 
 		return true;

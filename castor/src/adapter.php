@@ -1,7 +1,19 @@
 <?php
 
 abstract class Adapter extends Application {
+	public $error = false;
+
 	abstract function init();
+
+	public function setError($value) {
+		$this->error = $value;
+
+		return true;
+	}
+
+	public function getError() {
+		return $this->error;
+	}
 
 	public function load($instance = false) {
 		if($instance) {
@@ -19,12 +31,12 @@ abstract class Adapter extends Application {
 				$this->setActionname($actionName);
 		}
 
-		$this->setSitemap($instance->getSitemapAttribute());
-
 		if(!$this->init()) {
 			throw new Exception($this->getError());
+	
+			return false;
 		}
 
-		return true;
+		return $this;
 	}
 }

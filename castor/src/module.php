@@ -89,4 +89,26 @@ class module {
 
 		return false;
 	}
+
+	static function help($name) {
+		if(!self::exists($name))
+			throw new Exception("Unknown module: '".$name."'");
+		if(isset(self::$arrModules[$name]->helpText)) {
+			echo self::$arrModules[$name]->helpText."\n\n";
+		}
+		if(isset(self::$arrModules[$name]->helpParameters) && is_array(self::$arrModules[$name]->helpParameters)) {
+			echo "Parameters for '".$name."':\n\n";
+			foreach(self::$arrModules[$name]->helpParameters as $arr => $val) {
+				echo("'".$arr."' => ");
+				print_r($val);
+			}
+		}
+		echo "\n";
+		if(isset(self::$arrModules[$name]->helpMethods) && is_array(self::$arrModules[$name]->helpMethods)) {
+			echo "Methods for '".$name."':\n\n";
+			foreach(self::$arrModules[$name]->helpMethods as $method => $helpText) {
+				echo "'".$method."' => ".$helpText."\n";
+			}
+		}
+	}
 }

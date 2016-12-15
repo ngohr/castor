@@ -33,6 +33,7 @@ define('SITE_PATH', realpath(dirname(__FILE__)));
 require_once(SITE_PATH."/src/application.php");
 require_once(SITE_PATH."/src/elements.php");
 require_once(SITE_PATH."/src/module.php");
+require_once(SITE_PATH."/src/hooks.php");
 require_once(SITE_PATH."/src/surface.php");
 require_once(SITE_PATH."/src/operator.php");
 require_once(SITE_PATH."/src/adapter.php");
@@ -155,7 +156,7 @@ abstract class Castor {
 		}
 
 		// Load Surface´s for document Elements
-		$surfaceNodes = $xpath->query("surface", $elementDocument);
+		$surfaceNodes = $xpath->query('surface', $elementDocument);
 		if($surfaceNodes && $surfaceNodes->length > 0) {
 			for($i = 0; $i < $surfaceNodes->length; $i++) {
 				$node = $surfaceNodes->item($i);
@@ -190,9 +191,9 @@ abstract class Castor {
 				}
 
 				// Load Arrays for surface nodes...
+				$this->surface[$surfaceName]['elements'] = array();
 				$arrNodes = $xpath->query("arr", $node);
 				if($arrNodes && $arrNodes->length > 0) {
-					$this->surface[$surfaceName]['elements'] = array();
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
 		
@@ -267,9 +268,9 @@ abstract class Castor {
 				}
 
 				// Load Arrays for operator nodes...
+				$this->operator[$operatorName]['elements'] = array();
 				$arrNodes = $xpath->query("arr", $node);
 				if($arrNodes && $arrNodes->length > 0) {
-					$this->operator[$operatorName]['elements'] = array();
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
 		
@@ -344,9 +345,9 @@ abstract class Castor {
 				}
 
 				// Load Arrays for adapter nodes...
+				$this->adapter[$adapterName]['elements'] = array();
 				$arrNodes = $xpath->query("arr", $node);
 				if($arrNodes && $arrNodes->length > 0) {
-					$this->adapter[$adapterName]['elements'] = array();
 					for($e = 0; $e < $arrNodes->length; $e++) {
 						$arr = array();
 		

@@ -279,7 +279,7 @@ class Action {
 		 */
 		if(is_subclass_of($controller, 'Application')) {
 			$controller->setElements($this->getElements());
-			
+
 			// Locals will overwrite elements in Application Classes
 			$locals = $this->getLocals();
 			foreach($locals as $name => $arr) {

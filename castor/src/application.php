@@ -268,6 +268,6 @@ class Application {
 	}
 	
 	public function getError() {
-		return $this->error();
+		return $this->error;
 	}
 }
