@@ -16,6 +16,7 @@
 		<a href="#sitemap">Sitemap</a><br>
 		<a href="#pageandactions">Page & Action</a><br>
 		<a href="#modules">AddOns, Plugins bzw. Module</a><br>
+		<a href="#hooks">Hooks</a><br>
 		<p>
 			<a name="createDocument"></a>
 			<h2>Dokument und Konfiguration Erstellen</h2>
@@ -884,8 +885,51 @@ class indexController extends Application {
 Würde zunächst den Hilfetext des Plugins sessionManagement ausgeben und dann in der Methode des Logins unterbrechen und "Hurray iam loggedIn" ausgeben.<br><br>
 			</p>
 		</p>
-		<h2>Abhängigkeiten</h2>
-		<p>Neu implementiert wurden zudem die sog. dependecys, und Hooks für Plugins für eine Dokumentation war noch keine Zeit.</p>
-		Die Implementation von letzterem können interessierte sich gern einmal in plugins/fileCompressed.php ansehen.
+		<h2>Hooks</h2>
+		<a name="hooks"></a>
+		<p>
+				In Zukunft sollen für Plugin Entwickler verschiedene "Hook-Stops" verfügbar sein, um Models und Views während der Interpretation oder vor der Ausgabe manipulieren zu können.<br>
+				Der in plugins/fileCompressed.php zu findende Code ist ein gutes bsp. für den ersten zu diesem Zeitpunkt implementierten Hook.<br>
+				<h3>returnType</h3>
+				<p>
+					Die Drei, im unteren Teil zu findenden, noch sehr einfache Funktionen sollen Javascript, CSS oder XML Dokumente "minifyen" können.
+					<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+function CompressCss(&$objPage, $action) {
+	$objPage->call($action);
+...
+				</pre>
+				</p>
+				returnType Hooks ersetzen den Teil der Ausgabe, vor dem Aufruf und der Verarbeitung, der Rückgabe von $objPage->call($action);.<br>
+				<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+hooks::addHook('returnType', 'CompressCss', 'CompressCss');
+				</pre>
+				Durch das hinzufügen vom Typ: "returnType" mit dem Namen "CompressCss" und der Funktion CompressCss, wird der returnType "CompressCss" als valider Parameter für die Action anerkannt.<br>
+				<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+&lt;action name="css" return="CompressCss"&gt;
+	&lt;class&gt;HttpCache&lt;/class&gt;
+	&lt;method&gt;compressAction&lt;/method&gt;
+	&lt;style&gt;/styles/normalize.css;/base.css&lt;/style&gt;
+&lt;/action>
+				</pre>
+				Sollte wie hier das Attribute return auf den durch hooks::addHook('returnType'... registrierten Wert gesetzt werden,<br>
+				werden weitere Schritte zum verarbeiten der Ausgabe übersprungen und das Page Objekt mit allen Action Objekten an die Funktion übergeben und die Ausgabe beendet.<br>
+					<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+		$stylesheet = $objPage->getStylesheet($action);
+		$files = explode(";", $stylesheet);
+				</pre>
+				Die Funktion ruft mit $objPage->call($action); die durch den zweiten Parameter bekannte, eigentlich vom System geroutete, Methode auf aber ignoriert die Ausgabe.<br>
+				Durch den Aufruf von $objPage->getStylesheet($action); wird der Inhalt des Style Tags der aufgerufenen Action ausgelesen.<br>
+				Im weiteren fügt es alle durch semikolen getrennten Dateien zu einem String zusammen und versucht diese mit möglichst wenig Overhead auszugeben.<br>
+				Des weiteren Cached das Plugin die Ausgabe auf dem Server. Die gewählte Action aus der oben im Code zu findenden Controller Klasse, sendet sinnvolle Cacheing Header für den Client.<br>
+				Natürlich kann auch eine andere Methode aus einem anderen Controller, angegeben werden. Der erstellte returnType führt diese aber nur aus und ignoriert den zurückgegebenen Wert biher komplett.
+		</p>
+		<h2>Dependencys (Abhängigkeiten)</h2>
+		<p>Für eine Documentation war bisher keine Zeit.</p>
 	</body>
 </html>
