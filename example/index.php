@@ -1,6 +1,6 @@
 <?php
 
-// Include xsltDocument main.php
+// Include castor mainDocument
 require_once('../castor/Castor.php');
 
 try {
