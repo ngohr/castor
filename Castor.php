@@ -48,6 +48,8 @@
  *		- Surface Interfaces was developed at 25.07.2013
  *		- Operator Childs was developed at 27.07.2013
  *		- Adapter Pattern was developed at ~May 2014
+ *		- A first plugin was written at ~Aug 2016
+ *
  * #005 Use DocumentTypes to valid xml configurations and/or revalidate created documents.
  * #006 Use <var> Elements for Surface and Operator directives, in a simple case a node <arr> is exorbitant.
  * #007 Check for loaded config files and only overwrite if it is valid.
