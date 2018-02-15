@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Xslt Page Class
+ * Page Class
  *
  * - Construct entities for Action objects.
  * - Acts as factory for castor Main actions and bypass methods to set individual properties.
