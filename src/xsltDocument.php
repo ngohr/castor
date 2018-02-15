@@ -1,26 +1,51 @@
 <?php
 
 /*
+ * Copyright (c) 2016, Nanno Gohr
  *
- * xsltDocument Class extends Document 
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of  nor the names of its contributors may be used to
+ * endorse or promote products derived from this software without specific
+ * prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * xsltDocument Class extends Document
  *
  * - Objects of type Array or DomDocument will rendered as a xslt output or prepared for a client rendering with xsl include
  * - Expand nodes form config expand/add nodes
  * - $this->root extends $this->domDocumentPage with a root element and includes the main values from controller classes
- * 
+ *
  * @todos
- * 
+ *
  * #001 A root tag shouldt not named ever as 'root' and shouldt configured and named from class Castor
  * #003 implement compress output for return 'file' actions
- * 
+ *
  * @author
- * 
+ *
  * Nanno Gohr
- * 
+ *
  * @version
- * 
+ *
  * 1.0 / 24.11.2014
- * 
+ *
  */
 
 require_once(SITE_PATH."/src/Document.php");
@@ -98,7 +123,7 @@ class xsltDocument extends Document {
 			$this->domDocumentPage = new DOMDocument('1.0', 'UTF-8');
 			$this->domDocumentPage->preserveWhiteSpace = true;
 			$this->domDocumentPage->formatOutput = true;
-				
+
 			// Create Document Rootnode <root>
 			// Relates @todo #001: Document root name, must not named as 'root' otherwise it couldt named as html, document or alternative
 			$this->root = $this->domDocumentPage->createElement('root');
@@ -109,28 +134,28 @@ class xsltDocument extends Document {
 				throw new Exception('Page: "'.$page.'" is not defined...');
 			else
 				$objPage = $this->sitemap[$page];
-	
+
 			if($action) {
 				if(!$objPage->actionExists($action))
 					throw new Exception('Action "'.$action.'" for Page "'.$page.'" is not defined...');
 			} else {
 				// Find index
 				$action = $objPage->getIndex();
-	
+
 				if(!$objPage->actionExists($action))
 					throw new Exception('Action "'.$action.'" for Page "'.$page.'" is not defined...');
 			}
 		} else {
 			// Find RootPage
 			$page = $this->getRootpage();
-	
+
 			if(!$this->pageExists($page))
 				throw new Exception('Page: "'.$page.'" is not defined...');
 			else
 				$objPage = $this->sitemap[$page];
-	
+
 			$action = $this->getRootaction();
-	
+
 			if(!$objPage->actionExists($action))
 				throw new Exception('Action "'.$action.'" for Page "'.$page.'" is not defined...');
 		}
@@ -151,7 +176,7 @@ class xsltDocument extends Document {
 			case 'Array':
 				// Contruct DomDocument Elements from a given array, returned from $objPage->call($action);
 				$returnvalue = $objPage->call($action);
-	
+
 				if($returnvalue && is_array($returnvalue)) {
 					if(!elements::createElementRepresentation($returnvalue, $this->domDocumentPage, $this->root))
 						throw new Exception(elements::getError());
@@ -222,9 +247,9 @@ class xsltDocument extends Document {
 					} else {
 						throw new Exception("Fatal Error: cannot open ".$stylesheet);
 					}
-	
+
 					ob_end_flush();
-	
+
 					return true;
 				}
 
@@ -242,7 +267,7 @@ class xsltDocument extends Document {
 					} catch(DOMException $exeption) {
 						die(var_dump($exeption->getMessage()));
 					}
-				
+
 					$expand = $objPage->getLocalNodes($action);
 					$this->expandNodes($objPage, $action);
 				}
@@ -276,19 +301,19 @@ class xsltDocument extends Document {
 				} else {
 					return false;
 				}
-	
+
 				$this->domDocumentPage->appendChild($this->root);
-	
+
 				$this->sendXml();
-	
+
 				break;
-	
+
 			case 'server':
 				$this->domDocumentPage->appendChild($this->root);
 				$stylesheet = $objPage->getStylesheet($action);
 
 				$this->sendHTML($stylesheet);
-	
+
 				break;
 
 			default:
@@ -297,7 +322,7 @@ class xsltDocument extends Document {
 					$this->domDocumentPage->appendChild($this->root);
 					$this->sendXml();
 				}
-	
+
 				break;
 		}
 
@@ -326,22 +351,22 @@ class xsltDocument extends Document {
 	// $styleSheet must be an absolute path to a valid xsl stylesheet.
 	public function sendHTML($styleSheet) {
 		$xsl = new DomDocument();
-	
+
 		if(file_exists($styleSheet)) {
 			$xsl->load($styleSheet);
 		} else {
 			throw new Exception('Couldt not load stylesheet from File: '.$styleSheet);
 		}
-	
+
 		$xpr = new XsltProcessor();
 		$xpr->importStylesheet($xsl);
-	
+
 		$output = $xpr->transformToDoc($this->domDocumentPage);
-	
+
 		header('Content-Type: text/html; charset=UTF-8');
 
 		echo $output->saveHTML();
-	
+
 		return true;
 	}
 }

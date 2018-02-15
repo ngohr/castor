@@ -1,6 +1,31 @@
 <?php
 
 /*
+ * Copyright (c) 2016, Nanno Gohr
+ *
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of  nor the names of its contributors may be used to
+ * endorse or promote products derived from this software without specific
+ * prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  *
  * Xslt Action Class
  *
@@ -14,7 +39,7 @@
  *
  * #001 An Instance of a Controller couldt call a base loader, load Constants and Elements directly in called Classes.
  * 		Respective an abstract static method "init" couldt load elements and constants and replaces a __construct function for Application childs.
- * 
+ *
  * @version
  *
  * 0.91 / 26.09.2013
@@ -59,7 +84,7 @@ class Action {
 
 		return true;
 	}
-	
+
 	public function getPagename() {
 		return $this->pagename;
 	}
@@ -69,15 +94,15 @@ class Action {
 
 		return true;
 	}
-	
+
 	public function getName() {
 		return $this->name;
 	}
-	
+
 	public function setTitle($name) {
 		$this->title = $name;
 	}
-	
+
 	public function getTitle() {
 		return $this->title;
 	}
@@ -95,7 +120,7 @@ class Action {
 
 		return true;
 	}
-	
+
 	public function getClass() {
 		return $this->classname;
 	}
@@ -166,29 +191,29 @@ class Action {
 	public function addSurface($name, $obj) {
 		$this->arrSurface[$name] = $obj;
 	}
-	
+
 	public function getSurface($name = false) {
 		if(!$name)
 			return $this->arrSurface;
 		else
 			return $this->arrSurface[$name];
 	}
-	
+
 	public function addOperator($name, $obj) {
 		$this->arrOperator[$name] = $obj;
 	}
-	
+
 	public function getOperator($name = false) {
 		if(!$name)
 			return $this->arrOperator;
 		else
 			return $this->arrOperator[$name];
 	}
-	
+
 	public function addAdapter($name, $obj) {
 		$this->arrAdapter[$name] = $obj;
 	}
-	
+
 	public function getAdapter($name = false) {
 		if(!$name)
 			return $this->arrAdapter;
@@ -248,25 +273,25 @@ class Action {
 	public function getConstants() {
 		return $this->constants;
 	}
-	
+
 	public function applyCaching($mimeType) {
 		if($mimeType) {
 			$this->cacheApplied = true;
 			$this->mimeType = $mimeType;
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	public function cacheApplied() {
 		if($this->cacheApplied && $this->mimeType)
 			return true;
-		
+
 		return false;
 	}
-	
+
 	public function getMimeType() {
 		return $this->mimeType;
 	}
@@ -274,7 +299,7 @@ class Action {
 	public function run() {
 		// Load class
 		if(!class_exists($this->classname)) {
-			throw new Exception('Controller Class: '.$this->classname.' is not defined...'); 
+			throw new Exception('Controller Class: '.$this->classname.' is not defined...');
 		} else {
 			$controller = new $this->classname();
 		}
