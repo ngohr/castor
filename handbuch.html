@@ -17,6 +17,8 @@
 		<a href="#pageandactions">Page & Action</a><br>
 		<a href="#modules">AddOns, Plugins bzw. Module</a><br>
 		<a href="#hooks">Hooks</a><br>
+		<a href="#shortcuts">Shortcuts</a><br>
+		<a href="#dependencys">Dependencys</a><br>
 		<p>
 			<a name="createDocument"></a>
 			<h2>Dokument und Konfiguration Erstellen</h2>
@@ -387,8 +389,8 @@ $document->loadPage($page, $action);
 			<h2>Elemente und Konstanten</h2>
 			Ein großer Vorteil einer komplexen Konfiguration wie hier, ist nicht nur das die Beschreibung der Struktur auch für Projekt Neulinge offensichtlich lesbar und ohne Namenskonventionen ersichtlich ist,
 			sondern vor allem das weitere Elemente zur Beschreibung einer Action hinzugefügt werden können.
-			Innerhalb des document tags, des page tags oder des action tags können Konstanten definiert werden, die durch das Framework zugänglich gemacht werden.
-			Der arr Tag beginnt eine Sammlung von Konstanten die mit dem var tag innerhalb des arr Tags angelegt werden.
+			Innerhalb des document tags, des page tags oder des action tags können Konstanten und Variablen definiert werden, die durch das Framework zugänglich gemacht werden.
+			Der arr Tag beginnt eine Sammlung von Variablen die mit dem var tag innerhalb des arr Tags angelegt werden.
 			Der Einsatz von var Elementen ohne umschliessenden arr tag wird zurzeit nicht unterstützt.
 			Wenn die Datei config xml unzugänglich abgelegt wird, können so bspw. System Konstanten durch den Administrator eingetragen und geändert werden.
 <pre style="padding:5px; background-color:lightgrey;">
@@ -416,7 +418,7 @@ $document->loadPage($page, $action);
 				&lt;/arr&gt;
 
 				&lt;class&gt;simpleController&lt;/class&gt;
-				&lt;method&gt;impressum&lt;/method&gt;
+				&lt;method&gt;publicPage&lt;/method&gt;
 				&lt;file&gt;simpleController.php&lt;/file&gt;
 				&lt;style&gt;/styles/impressum.html&lt;/style&gt;
 			&lt;/action&gt;
@@ -428,7 +430,7 @@ $document->loadPage($page, $action);
 <pre style="padding:5px; background-color:lightgrey;">
 &lt;?php
 class simpleController extends Application {
-	public function impressum() {
+	public function publicPage() {
 		$dbdata = $this->getElements('dbConstants');
 
 		die("Jetzt eine Datenbankverbindung mit: ".$dbdata['host']." dem user: ".$dbdata['username']." und dem Passwort: ".$dbdata['password']." aufbauen");
@@ -929,7 +931,186 @@ hooks::addHook('returnType', 'CompressCss', 'CompressCss');
 				Des weiteren Cached das Plugin die Ausgabe auf dem Server. Die gewählte Action aus der oben im Code zu findenden Controller Klasse, sendet sinnvolle Cacheing Header für den Client.<br>
 				Natürlich kann auch eine andere Methode aus einem anderen Controller, angegeben werden. Der erstellte returnType führt diese aber nur aus und ignoriert den zurückgegebenen Wert biher komplett.
 		</p>
+		<a name="shortcuts"></a>
+		<h2>Shortcuts</h2>
+		<p>
+			Es kommt häufig vor das Seiten einer Homepage, nur durch das Design abweichen aber der PHP Code auf ein paar Zeilen beschr&auml;nkt ist.<br>
+			Wenn nur der &lt;style&gt; Tag von einer Action einen Unterschied ausmacht, muss weder eine vollt&auml;ndige Action noch eine weitere Methode implementiert werden:<br>
+			<pre style="padding:5px; background-color:lightgrey;">
+&lt;action name="agb" title="Allgemeine Geschäftsbedingungen"&gt;
+	&lt;shortcut page="home"&gt;impressum&lt;/shortcut&gt;
+	&lt;style&gt;impressum.html&lt;/style&gt;
+&lt;/action&gt;
+			</pre>
+			Erstellt eine Action "agb" die auf die oben gezeigte (<a href="#elements">Elemente und Konstanten</a>) Action 'impressum' refenrenziert.<br>
+			Dabei wird für die Action jegliche Option und vererbten Elemente von 'impressum', auch auf die Action 'agb' vererbt.
+			Nehmen wir an die Methode publicPage() enthält ein Usertracking. Diese Methode wird quasi recycled aber Beim aufruf von loadPage mit einem anderen Stylesheet gerendert.<br>
+			Es handelt sich beim &lt;shortcut&gt; Tag nicht um eine kosmetische Verbesserung. Beim Aufbau des Objekt Baums, welches nicht durch eine Action referenziert wird.<br>
+			Wurde bereite ein Action Objekt mit dem Routing zur Methode 'publicPage' erstellt. Beim Parsen der Config, wird im Falle von nicht exakt angesteuerten Actions also kein weiteres Objekt Action und oder auch Page erneut erstellt.
+			Ein 'shortcut' funktioniert auch, wenn eine Action mit:
+			<pre style="padding:5px; background-color:lightgrey;">
+&lt;?php
+
+$document = new phtmlDocument();
+$document->loadPage('home', 'impressum');
+</pre>
+			auferufen wird. Für gewöhnlich wird, wenn der Parameter Action exakt gesetzt wurde, nur ein rudiment&auml;rer Objekt Baum aufgebaut.<br>
+			Die dient der Geschwindigkeit, den Castor lädt zwar nur was referenziert wird, aber muss einen Teil der Config geparst haben um zu wisssen was geladen werden muss.<br>
+			Befindet sich die Action agb bspw. in einer page 'weiteres und diese wird direkt referneziert, wird dies erkannt und anhand von der definition von impressum nur ein Objekt Action erstellt.<br>
+			Befinden sich beide Actions in der Page Home, wird für impressum ein Action Objekt erstellt und von Impressum referenziert. In den Attributen des Objekts wird nur der Stylesheet ausgetauscht.<br>
+			Da nur entweder 'impressum' oder 'agb' aufgerufen werden kann, erkennt Castor welche Elemente sich unterscheiden und instanziert die Action wie gewünscht.<br>
+			Die Angabe von 'file', 'class' und 'method' ist bei shortcuts nicht nötig.<br>
+		</p>
+		<a name="dependencys"></a>
 		<h2>Dependencys (Abhängigkeiten)</h2>
-		<p>Für eine Documentation war bisher keine Zeit.</p>
+		<p>
+			Oft sind große Teile eines PHP Programms von einigen wenigen Variablen abhängig. Bspw. eine Datenbankverbindung möchte man nicht immer wieder erneut aufbauen.<br>
+			In Objekt Orientierten Programmen, müssen diese aber meist über mehrere Klassen hinweg geteilt werden und dann wiederbenutzbar sein.<br>
+			Wie jeder weis wird dies in OOP Programmen meist durch ein singleton Pattern gel&ouml;&szlig;t welches die weiter offene Datenbankverbindung zurückgibt.<br>
+			Durch die Angabe von Elementen in der Konfiguration, könnten wie oben gezeigt schon in der Konfiguration Benutzerdaten oder anderes zur verf&uuml;gung gestellt werden.<br>
+			Module die mit module::get geladen werden, sind für sich genommen Singleton Patterns und bleiben erhalten bis Inhalte per Hand gelöscht werden.<br>
+			Ein Modul wie:<br>
+			<pre style="padding:5px; background-color:lightgrey;">
+class MysqlDB extends Surface {
+	private $dbConstants = false;
+	private $dbConnection = false;
+
+	public function init() {
+		$this->dbConstants = (object) $this->getElements('dbConstants');
+
+		if(!$this->dbConstants->host) {
+			$this->setError('Element host is not set!');
+
+			return false;
+		}
+		if(!$this->dbConstants->username) {
+			$this->setError('Element username is not set!');
+
+			return false;
+		}
+		if(!$this->dbConstants->password) {
+			$this->setError('Element password is not set!');
+
+			return false;
+		}
+		if(!$this->dbConstants->dbname) {
+			$this->setError('Element dbname is not set!');
+
+			return false;
+		}
+
+		return true;
+	}
+
+	public function &connect() {
+		if(!$this->dbConnection) {
+			$this->dbConnection = new mysqli(
+				$this->dbConstants->host,
+				$this->dbConstants->username,
+				$this->dbConstants->password,
+				$this->dbConstants->dbname
+			);
+
+			if($this->dbConnection->connect_error) {
+				throw new Exception('Connect Database Error: '.$this->dbConnection->connect_error);
+			}
+
+			$this->dbConnection->set_charset("utf8mb4");
+		}
+
+		return $this->dbConnection;
+	}
+
+	public function close() {
+		if($this->dbConnection)
+			$this->dbConnection->close();
+		else
+			return false;
+
+		return true;
+	}
+
+	public function reset() {
+		if(!$this->close())
+			$this->setError('reset(), cannot reset closed Database Connection');
+
+		$this->dbConstants = array();
+		
+		return $this->init();
+	}
+}
+			</pre>
+			Definiert mit:
+			<pre style="padding:5px; background-color:lightgrey;">
+&lt;surface name="mysqliConnection"&gt;
+	&lt;arr name="dbConstants"&gt;
+		&lt;var name="dbname"&gt;schema&lt;/var&gt;
+		&lt;var name="host"&gt;127.0.0.1&lt;/var&gt;
+		&lt;var name="username"&gt;user&lt;/var&gt;
+		&lt;var name="password"&gt;passwort&lt;/var&gt;
+	&lt;/arr&gt;
+	&lt;file&gt;modules/mysqlidb.php&lt;/file&gt;
+	&lt;class&gt;MysqlDB&lt;/class&gt;
+&lt;/surface&gt;
+			</pre>
+			K&ouml;nnte beim initialisieren durch den &lt;load&gt; Tag, beim Aufbau der Page eine Datenbank Verbindung herstellen und durch:
+			<pre style="padding:5px; background-color:lightgrey;">
+$dbConnection = module::get('mysqliConnection', $this);
+			</pre>
+			Bereitstellen. Die connect Methode oben fängt zwar auch den mehrfachen Aufruf von connect auf, aber das Objekt im Speicher das von module::get zurückgegeben wird, wird sich nicht verändern.<br>
+			Angenommen es liegt bereits ein ähnliches Modul vor und ein neues soll erstellt werden. Dann kann nach dem Laden des Moduls beliebig oft module::get aufgerufen werden.<br> 
+			init() wird dabei nicht erneut ausgeführt, dazu wird onReady wie oben benutzt.<br>
+			Ein anderes Modul soll braucht wahrscheinlich auch eine Datenbank Verbindung die in MysqlDB auch abstrahiert aufgebaut sein könnte.<br>
+			Da der Objekt Baum auch in den Modulen zur Verfügung steht, kann der Abruf von jeglichen in diesem Kontext per &lt;load&gt; geladenen Modul auch dort erfolgen.<br>
+			Bspw. könnte eine Klasse für das Rechte Management einer Seite eine Datenbank Verbindung benötigen.<br>
+			<pre style="padding:5px; background-color:lightgrey;">
+class user extends sessionManagement {
+	private $mysqli;
+
+	public function onReady() {
+		$dbConnection = module::get('mysqliConnection', $this);
+		$this->mysqli = $dbConnection->connect();
+
+		return true;
+	}
+}
+			</pre>
+			Wenn sowohl 'mysqliConnection' als auch 'user', durch den &lt;load&gt; Tag geladen wurden kann ein Controller bspw so:<br>
+			<pre style="padding:5px; background-color:lightgrey;">
+public function myMethod() {
+	$dbConnection = module::get('mysqliConnection', $this);
+	$mysqli = $dbConnection->connect();
+}
+			</pre>
+			Eine Mysql Connection aufbauen...<br>
+			Wird daraufhin:<br>
+			<pre style="padding:5px; background-color:lightgrey;">
+$user = module::get('user', $this);
+			</pre>
+			Aufgerufen, wird die Datenbank Verbindung in user->onReady nicht erneut aufgebaut, sondern wie beim Singleton Pattern wiederverwendet.<br>
+			Es ist wichtig zu verstehen das die &connect() Methode nur zur Sicherheit abf&auml;ngt ob die Verbindung bereits besteht.<br>
+			Die Nutzung in 'user' währe auch möglich, wenn connect() nicht erneut aufgerufen wird.<br><br>
+			Um bei selbst erstellten Konstrukten wie einer Benutzerverwaltung auch neu Einsteigern in den Code, zu erleichtern eine Action mit dem Modul 'user' anzulegen.<br>
+			Kann oben im &lt;document&gt; Tag das Modul Konstrukt mit einem &lt;dependency&gt; Tag versehen werden:<br>
+			<pre style="padding:5px; background-color:lightgrey;">
+&lt;operator name="user"&gt;
+	&lt;dependency type="surface"&gt;mysqliConnection&lt;/dependency&gt;
+	&lt;file&gt;modules/user.php&lt;/file&gt;
+	&lt;class&gt;user&lt;/class&gt;
+	&lt;arr name="constants"&gt;
+		&lt;var name="fixuseragent"&gt;yes&lt;/var&gt;
+		&lt;var name="maxlifetime"&gt;yes&lt;/var&gt;
+		&lt;var name="forwardsecrecy"&gt;yes&lt;/var&gt;
+	&lt;/arr&gt;
+&lt;/operator&gt;
+			</pre>
+			Das hat zur folge, das ein Programmierer der eine neue Action mit einer Userverwaltung deployen möchte, das Modul nur laden kann, wenn auch mysqliConnection geladen wurde.<br>
+			Das Page Objekt reagiert mit:
+			<pre style="padding:5px; background-color:lightgrey;">
+throw new Exception("Dependency mysqliConnection not found!");
+			</pre>
+			Wenn mit &lt;load&gt;user&lt;/load&gt; 'user' geladen werden soll, aber 'mysqliConnection' nicht geladen wurde.<br>
+			&Auml;hnlich den HELP Konstanten eine strukturierte Abfrage, die nur bei Modularer Entwicklung einen echten mehrwert verspricht.<br>
+		</p>
 	</body>
 </html>
