@@ -39,7 +39,7 @@
  *
  * #001 An Instance of a Controller couldt call a base loader, load Constants and Elements directly in called Classes.
  * 		Respective an abstract static method "init" couldt load elements and constants and replaces a __construct function for Application childs.
- *
+ * 
  * @version
  *
  * 0.91 / 26.09.2013

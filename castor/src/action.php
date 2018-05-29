@@ -9,15 +9,10 @@
  * - Data Models, will returned and performed in associatet objects.
  * - A format for Data is defined by setRendering and setReturnType.
  * - Page and Action objects are named. An Action Object relates to a Page and is named as $this->name.
- *
- * @todo
- *
- * #001 An Instance of a Controller couldt call a base loader, load Constants and Elements directly in called Classes.
- * 		Respective an abstract static method "init" couldt load elements and constants and replaces a __construct function for Application childs.
  * 
  * @version
  *
- * 0.91 / 26.09.2013
+ * 1.0 / 03.01.2018
  *
  * @author
  *

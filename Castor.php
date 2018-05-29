@@ -1,6 +1,8 @@
 <?php
 
 /*
+ * The Castor main class
+ *
  * Copyright (c) 2016, Nanno Gohr
  *
  * All rights reserved.
@@ -26,9 +28,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- * The Castor main class
- *
+ * 
  * - Documents wouldt extend Castor to construct the given sitemap
  * - The given sitemap from config files will be deconstructed
  * - The filtered node will given to childs and a method named createActions
@@ -36,10 +36,10 @@
  * - Tags from config/document will extracted here and only the sitemap/page tags will prepared for document classes
  * - Also Castor modules will prepared here and loaded with $this->loadModules();
  * - Elements in document or module nodes will prepared here and given to the sitemap before Document calls loadPage()
- *
+ * 
  * @todos
- *
- * #001 loadModules() couldt called manually or module tags couldt located in page or action namespaces
+ * 
+ * #001 loadModules() couldt called manually or module tags couldt located in page or action namespaces 
  * #002 An include tag shouldt extend the config
  * #003 Test sensitive factory classes in object page, respective there shouldt be a place for non Application Object Childs in later versions.
  * #004 Implement modules/plugins respective db class loaders or elements and constants like an OBJ.
@@ -53,7 +53,7 @@
  * #005 Use DocumentTypes to valid xml configurations and/or revalidate created documents.
  * #006 Use <var> Elements for Surface and Operator directives, in a simple case a node <arr> is exorbitant.
  * #007 Check for loaded config files and only overwrite if it is valid.
- *
+ * 
  */
 define('SITE_PATH', realpath(dirname(__FILE__)));
 

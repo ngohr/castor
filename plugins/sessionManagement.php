@@ -1,8 +1,10 @@
 <?php
 
 /*
+ * Class userDB is an Operator Plugin
  *
  * Copyright (c) 2016, Nanno Gohr
+ * - Provides secure session initalization for differnet server coniguration with cookies only.
  *
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without
@@ -31,9 +33,14 @@
  * - Provides secure session initalization for differnet server coniguration with cookies only.
  * - Works as Castor Plugin extended by Operators
  *
+ * @todos
+ *
+ * #001 Data Models shouldt be a difently clean collection of abstract classes and it must be an experimental features for years of testing, relates module.php #001
+ *
  * @version
  *
  * 1.0 / 02.08.2016
+ * 0.9 / 02.08.2016
  *
  * @author
  *

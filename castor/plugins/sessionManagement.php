@@ -26,20 +26,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE. 
  *
- */
- 
-/*
- * Class userDB is an Operator Plugin
- * 
  * - Provides secure session initalization for differnet server coniguration with cookies only.
- * 
- * @todos
- * 
- * #001 Data Models shouldt be a difently clean collection of abstract classes and it must be an experimental features for years of testing, relates module.php #001
- * 
+ *
  * @version
  *
- * 0.9 / 02.08.2016
+ * 1.0 / 02.01.2018
  *
  * @author
  *
