@@ -93,7 +93,7 @@ class Page {
 
 	public function addAction($name, $classname = false, $method = false, $refferedActionname = false) {
 		if(!$classname) {
-			if(!$this->classname) {
+			if(!$this->classname && !$refferedActionname) {
 				throw new Exception("Couldt not add action without classname!");
 			} else {
 				$classname = $this->getClass();
@@ -101,7 +101,7 @@ class Page {
 		}
 
 		if(!$method) {
-			if(!$this->method) {
+			if(!$this->method && !$refferedActionname) {
 				throw new Exception("Couldt not add action without methodname!");
 			} else {
 				$method = $this->getMethod();

@@ -186,10 +186,12 @@ abstract class Document extends Castor {
 	}
 
 	public function createActions($pagename, $pagenode, $actionname = false) {
-		if($this->pageExists($pagename))
+		if($this->pageExists($pagename) && !$actionname)
 			throw new Exception("Page: ".$pagename." is not inimitable!");
-		if(!$this->createPage($pagename, $pagenode))
-			throw new Exception("Fatal Error: Cannot create ".$pagename);
+		if(!$this->pageExists($pagename)) {
+			if(!$this->createPage($pagename, $pagenode))
+				throw new Exception("Fatal Error: Cannot create ".$pagename);
+		}
 
 		$xpath = new DOMXpath($this->domDocumentObj);
 
@@ -210,6 +212,9 @@ abstract class Document extends Castor {
 				$refferedactionname = false;
 
 				$actionname = $actionNode->getAttribute('name');
+				if($this->sitemap[$pagename]->actionExists($actionname)) {
+					continue;
+				}
 
 				// Look for a shortcut instruction
 				$shortcutNodes = $xpath->query("shortcut", $actionNode);
@@ -231,6 +236,10 @@ abstract class Document extends Castor {
 
 					$refferedactionname = $shortcutNode->nodeValue;
 					if($refferedactionname && $refferedactionname != '') {
+						if(!$refferedpageObj->actionExists($refferedactionname) && $refferedpagename == $pagename) {
+							$this->createActions($pagename, $pagenode, $refferedactionname);
+						}
+
 						$refferedAction = $refferedpageObj->getObjAction($refferedactionname);
 						if($refferedAction) {
 							// Wenn der shortcut einen eigenen method node hat
