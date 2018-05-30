@@ -320,8 +320,6 @@ abstract class Document extends Castor {
 				}
 
 				$returnType = $actionNode->getAttribute('return');
-				if($actionname == 'verify')
-					trigger_error($returnType);
 				$this->sitemap[$pagename]->setReturnTyp($returnType, $actionname);
 				$title = $actionNode->getAttribute('title');
 				$this->sitemap[$pagename]->setActionTitle($title, $actionname);
