@@ -4,11 +4,6 @@
     "require": {
         "php": "5.6 | ^7"
     },
-{
-    "autoload": {
-        "classmap": ["src/", "/", "castor/", "Castor.php"]
-    }
-}
 	"autoload": {
         "files": ["Castor.php"],
 		"exclude-from-classmap": ["src/", "plugins/"]
