@@ -88,7 +88,7 @@ abstract class Castor {
 
 	abstract function createActions($pagename, $templateObj);
 
-	public function __construct($file, $pagename = false, $actionname = false, $notCreate = false) {
+	public function __construct($file = false, $pagename = false, $actionname = false, $notCreate = false) {
 		// Create DomDocument Object
 		$this->domDocumentObj = new DOMDocument('1.0', 'UTF-8');
 		$this->domDocumentObj->preserveWhiteSpace = true;

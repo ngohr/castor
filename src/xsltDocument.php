@@ -92,8 +92,7 @@ class xsltDocument extends Document {
 
 	public function loadPage($page = false, $action = false) {
 		$objPage = false;
-		if($action == 'verify')
-			trigger_error("hallo");
+
 		// Create DomDocument Object
 		if(!$this->domDocumentPage) {
 			$this->domDocumentPage = new DOMDocument('1.0', 'UTF-8');
@@ -163,6 +162,7 @@ class xsltDocument extends Document {
 
 			case 'text/html':
 				// Print Plain Text from $objPage->load();
+				header('Content-Type: text/html; charset=UTF-8', true);
 				ob_start();
 
 				if(!$action) {
@@ -172,7 +172,6 @@ class xsltDocument extends Document {
 					echo $objPage->call($action);
 				}
 
-				header('Content-Type: text/html; charset=UTF-8');
 				ob_end_flush();
 
 				return true;
@@ -180,7 +179,7 @@ class xsltDocument extends Document {
 				break;
 
 			case 'json':
-				header('Content-Type: application/json; charset=UTF-8');
+				header('Content-Type: application/json; charset=UTF-8', true);
 				ob_start();
 
 				if(!$action) {
@@ -206,8 +205,8 @@ class xsltDocument extends Document {
 			case 'file':
 				$returnvalue = $objPage->call($action);
 				if($returnvalue) {
+					header('Content-Type: text/html; charset=UTF-8', true);
 					ob_start();
-					header('Content-Type: text/html; charset=UTF-8');
 
 					$stylesheet = $objPage->getStylesheet($action);
 					$handle = @fopen($stylesheet, "r");
@@ -225,9 +224,9 @@ class xsltDocument extends Document {
 					}
 
 					ob_end_flush();
-
-					return true;
 				}
+
+				return true;
 
 				break;
 
@@ -244,7 +243,6 @@ class xsltDocument extends Document {
 						die(var_dump($exeption->getMessage()));
 					}
 
-					$expand = $objPage->getLocalNodes($action);
 					$this->expandNodes($objPage, $action);
 				}
 				break;
@@ -265,6 +263,7 @@ class xsltDocument extends Document {
 						}
 					}
 				}
+				flush();
 				ob_end_flush();
 				break;
 		}
@@ -301,7 +300,6 @@ class xsltDocument extends Document {
 
 			default:
 				if($returnType == "DomDocument") {
-					header('Content-type: text/xml; charset=UTF-8');
 					$this->domDocumentPage->appendChild($this->root);
 					$this->sendXml();
 				}
