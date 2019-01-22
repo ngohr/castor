@@ -1,0 +1,7 @@
+{
+    "name": "ngohr/castor",
+    "description": "PHP MVC Router",
+    "require": {
+        "php": "^7.1"
+    }
+}
