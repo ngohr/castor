@@ -6,6 +6,6 @@
     },
 	"autoload": {
         "files": ["Castor.php"],
-		"exclude-from-classmap": ["src/", "plugins/", "castor/src/", "castor/plugins/"]
+		"exclude-from-classmap": ["src/", "plugins/"]
     }
 }
