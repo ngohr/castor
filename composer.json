@@ -5,7 +5,7 @@
         "php": "5.6 | ^7"
     },
 	"autoload": {
-        "files": ["Castor.php"],
-		"exclude-from-classmap": ["src/", "plugins/"]
+        "files": ["Castor.php", "castor/Castor.php"],
+		"exclude-from-classmap": ["src/", "plugins/", "castor/src/", "castor/plugins/"]
     }
 }
