@@ -16,20 +16,19 @@ class HttpCache extends Application {
 					$lastModified = filemtime($_SERVER['DOCUMENT_ROOT'].$file);
 			}
 		}
-		self::Init($lastModified, 7200);
+		self::Init($lastModified, 8640000);
 	}
 
 	public static function Init($lastModifiedTimestamp, $maxAge) {
 		if(self::IsModifiedSince($lastModifiedTimestamp)) {
 			self::SetLastModifiedHeader($lastModifiedTimestamp, $maxAge);
 		} else {
-			self::SetNotModifiedHeader($maxAge);
+			self::SetNotModifiedHeader($lastModifiedTimestamp, $maxAge);
 		}
 	}
 
 	private static function IsModifiedSince($lastModifiedTimestamp) {
 		$allHeaders = getallheaders();
-
 		if(array_key_exists("If-Modified-Since", $allHeaders)) {
 			$gmtSinceDate = $allHeaders["If-Modified-Since"];
 			$sinceTimestamp = strtotime($gmtSinceDate);
@@ -43,10 +42,11 @@ class HttpCache extends Application {
 		return true;
 	}
 
-	private static function SetNotModifiedHeader($maxAge) {
+	private static function SetNotModifiedHeader($lastModifiedTimestamp, $maxAge) {
 		// Set headers
 		header("HTTP/1.1 304 Not Modified", true);
-		header("Cache-Control: public, max-age=$maxAge", true);
+		header("Cache-Control: public, max-age=".$maxAge, true);
+		header("ETag: \"".md5($lastModifiedTimestamp)."\"");
 		die();
 	}
 
@@ -56,7 +56,8 @@ class HttpCache extends Application {
 
 		// Set headers
 		header("HTTP/1.1 200 OK", true);
-		header("Cache-Control: public, max-age=$maxAge", true);
+		header("Cache-Control: public, max-age=".$maxAge, true);
+		header("ETag: \"".md5($lastModifiedTimestamp)."\"");
 		header("Last-Modified: $date", true);
 	}
 }
@@ -106,6 +107,8 @@ function CompressDomDocument(&$objPage, $action) {
 		}
 	}
 
+	header('Content-Type: text/html; charset=UTF-8', true);
+
 	// Import the node, and all its children, to the document
 	$returnvalue = $objPage->call($action);
 	if($returnvalue) {
@@ -119,6 +122,7 @@ function CompressDomDocument(&$objPage, $action) {
 		}
 	}
 	$domDocumentPage->appendChild($rootNode);
+
 	$styleSheet = $objPage->getStylesheet($action);
 
 	$xsl = new DomDocument();
@@ -130,8 +134,9 @@ function CompressDomDocument(&$objPage, $action) {
 	$xpr = new XsltProcessor();
 	$xpr->importStylesheet($xsl);
 	$output = $xpr->transformToDoc($domDocumentPage);
-	header('Content-Type: text/html; charset=UTF-8', true);
+
 	$content = $output->saveHTML();
+	$content = str_replace(" SYSTEM \"about:legacy-compat\"", '', $content);
 	$content = str_replace("\t", "", $content);
 	$content = str_replace("\r", "", $content);
 	$content = preg_replace("/[^\/]\<--.*--\>/s", '', $content);

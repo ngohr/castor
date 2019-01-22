@@ -2,6 +2,10 @@
     "name": "ngohr/castor",
     "description": "PHP MVC Router",
     "require": {
-        "php": "^7.1"
+        "php": "5.6 | ^7"
+    },
+	"autoload": {
+        "files": ["Castor.php"],
+		"exclude-from-classmap": ["src/", "plugins/"]
     }
 }
