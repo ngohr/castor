@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Castor Referenz</title>
+	</head>
+	<body style="font-family:arial, helvetica, sans-serif;">
+		<h1>Castor Handbuch</h1>
+		<a href="#castor">Castor Referenz</a><br>
+		<a href="#loadPage">loadPage()</a><br>
+		<a href="#moreCator">Weitere Methoden der Castor Klasse</a><br>
+		<a href="#application">class Application</a><br>
+		<p>
+			<a name="castor"></a>
+			<h2>Castor Constructor</h2>
+			Der Constructor der Klasse "Castor", wird &uuml;ber die Klasse "Document" an "xsltDocument" oder "phtmlDocument" vererbt...<br>
+			Die Klasse wird nie direkt instanziiert, da abstrakte Methoden erst von den Document Klassen implementiert werden.<br>
+			Hier implementiert, sind der constructor und Funktionen die das Document &uuml;ber die Klassen "Page" und "Action" hinaus kontrollieren.
+<pre style="padding:5px; background-color:lightgrey;">
+Castor->construct($file = false, $pagename = false, $actionname = false, $notCreate = false)
+</pre>
+			<h3>Parameter</h3>
+			<p>$file, die Datei mit der XML Konfiguration als absoluter Pfad oder false, wenn in config/config.xml gesucht werden soll.</p>
+			<p>$pagename, wenn der Parameter schon vor loadPage() gesetzt wurde, wird nur der Objekt Baum für diese Page konstruiert</p>
+			<p>$actionname, wenn $pagename gesetzt ist und $actionname gesetzt wurde, wird nur der Objekt Baum f&uuml;r diese Page und diese Action aufgebaut</p>
+			<p>$notCreate, ist $notCreate = true, wird die interne Sitemap nicht als Document Object Model aufgebaut.</p>
+			<p>
+				Die Bestm&ouml;gliche Performance wird erreicht, wenn alle Parameter gesetzt wurden.<br>
+				Den umfangreichsten Zugriff auf Elemente in der Document Hierarchie wird erreicht, wenn alle Parameter ausgespart werden.
+			</p>
+		</p>
+		<p>
+			<a name="loadPage"></a>
+			<h2>phtmlDocument->loadPage und xsltDocument->loadPage</h2>
+<pre style="padding:5px; background-color:lightgrey;">
+xsltDocument->loadPage($page = false, $action = false);
+phtmlDocument->loadPage($page = false, $action = false);
+</pre>
+			<h3>Parameter</h3>
+			<p>$page, die Seite die geladen werden soll, wird der Parameter $action ausgespart, wird die default action der Page angesteuert.</p>
+			<p>$action, die Action die geladen werden soll.</p>
+			<p>
+				Nach dem Aufruf, werden die Dateien aus dem Dokument Baum bis zu der angesteuerten Action eingebunden.<br>
+				Die Parameter des Style Tags werden überprüft.<br>
+				Die Methode auf die die Action geroutet werden soll, wird aufgerufen und das Ergebniss wie definiert ausgegeben.<br>
+				W&auml;hrend dem Aufruf wird der Output Buffer von PHP benutzt innerhalb der Controller-Action, kann dieser aber geflusht werden.
+			</p>
+		</p>
+		<p>
+			<a name="moreCator"></a>
+			<h2>Manipulation des Dokumentes</h2>
+			<p>
+			Die obere Instanz der Dokument Hierarchie, kann vor dem Aufruf von loadPage() mit weiteren Methoden manipuliert werden.
+			</p>
+<pre style="padding:5px; background-color:lightgrey;">
+xsltDocument->setRootpath($value);
+phtmlDocument->setRootpath($value); // Manipuliert die in der Config unter &lt;document&gt;&lt;path&gt; zu findende Option
+xsltDocument->getRootpath();
+phtmlDocument->getRootpath(); // Gibt die in der Config unter &lt;document&gt;&lt;path&gt; zu findende Option als string zur&uuml;ck
+
+xsltDocument->setRootfile();
+phtmlDocument->setRootfile(); // Manipuliert die in der Config unter &lt;document&gt;&lt;file&gt; zu findende Option
+xsltDocument->getRootfile();
+phtmlDocument->getRootfile(); // Gibt die in der Config unter &lt;document&gt;&lt;file&gt; zu findende Option als string zur&uuml;ck
+
+xsltDocument->setRootpage($value);
+phtmlDocument->setRootpage($value); // Manipuliert die in der Config unter &lt;document&gt;&lt;root&gt; zu findende Option
+xsltDocument->getRootpage();
+phtmlDocument->getRootpage(); // Gibt die in der Config unter &lt;document&gt;&lt;root&gt; zu findende Option als string zur&uuml;ck
+
+xsltDocument->setRootaction($value);
+phtmlDocument->setRootaction($value); // Manipuliert die in der Config unter &lt;document&gt;&lt;root[@action]&gt; zu findende Option
+xsltDocument->getRootaction();
+phtmlDocument->getRootaction(); // Gibt die in der Config unter &lt;document&gt;&lt;root[@action]&gt; zu findende Option als string zur&uuml;ck
+
+xsltDocument->pageExists($name);
+phtmlDocument->pageExists($name); // Prüft ob ein Page Objekt mit dem übergebenen Namen im Dokument Baum bereits existiert
+</pre>
+		</p>
+		<p>
+			<a name="castor"></a>
+			<h2>class Application()</h2>
+			<p>
+				Die Controller erben von der Klasse Application, die weitere Funktionen zur Manipulation des Dokumentes aber auch Zugriff auf die Konfiguration ermöglicht.<br />
+				Der Constructor kann überladen werden, aber erhält keine Parameter.
+			</p>
+			<h3>Application->getObjPage($name)</h3>
+			<p>
+				Das Page Objekt mit dem Namen $name holen.
+				<pre style="padding:5px; background-color:lightgrey;">
+					Application->getObjPage($pagename)->getObjAction($actionname) // Das Action Objekt einer konfigurierten Page holen.
+				</pre>
+			</p>
+			<h3>Application->getElement($name = false)</h3>
+			<p>
+				Elemente aus dem arr Tag in der Config holen.
+				&lt;arr&gt; Elemente mit dem Namen $name und die dazugehörigen &lt;var&gt; Tags als assoziatives Array holen.<br>
+				<pre style="padding:5px; background-color:lightgrey;">
+					$this->getElement('databaseconnection'); // Liefert die var Tags aus der Konfig wenn ein array 'databaseconnection' existiert ansonsten wird false zurückgegeben.
+				</pre>
+			</p>
+			<h3>Application->getDomElement($name)</h3>
+			<p>
+				&lt;arr&gt; Elemente mit dem Namen $name und die dazugehörigen &lt;var&gt; Tags als DomDocument Objekt holen.<br>
+				&lt;arr&gt; Elemente und die dazugehörigen &lt;var&gt; Tags werden als assoziatives Array geliefert.
+				<pre style="padding:5px; background-color:lightgrey;">
+					$this->getElements('databaseconnection'); // Liefert die Werte des arr Tags 'databaseconnection' aus der Konfiguration als DomDocument Objekt
+				</pre>
+			</p>
+			<h3>Application->getPagename()</h3>
+			<p>
+				Liefert den Namen der aktuellen Page
+				<pre style="padding:5px; background-color:lightgrey;">
+					// Wenn man sich innerhalb der Page hello befindet wird "Hello World" ausgegeben.
+					if($this->getPagename() == 'hello')
+						die("Hello World");
+				</pre>
+			</p>
+			<h3>Application->getActionname()</h3>
+			<p>
+				Liefert den Namen der aktuellen Page
+				<pre style="padding:5px; background-color:lightgrey;">
+					// Wenn man sich innerhalb der Page 'hello' und in der Action 'world' befindet wird "Hello World" ausgegeben.
+					if($this->getPagename() == 'hello' && $this->getActionname('world'))
+						die("Hello World");
+				</pre>
+			</p>
+			<h3>Application->getPage()</h3>
+			<p>
+				Liefert das Page Object dem die aktuelle Action zugehörig ist.
+				<pre style="padding:5px; background-color:lightgrey;">
+					Application->getPage()->getElement('databaseconnection') // Das <arr> Element mit dem Namen 'databaseconnection' holen, das für die aktuelle Page einzigartig ist.
+				</pre>
+			</p>
+			<h3>Application->setStylesheet($file)</h3>
+			<p>
+				Überschreibt den &lt;style&gt; Tag aus der Konfiguration mit einem beliebigen Wert
+				<pre style="padding:5px; background-color:lightgrey;">
+					Application->setStylesheet('fatalerror.xsl') // Anstatt den Stylesheet aus der Konfig zu nehmen wird das Ergebnis der Action mit fatalerror.xsl gerendert
+				</pre>
+			</p>
+			<h3>Application->getSitemapArray($computeActions = true)</h3>
+			<p>
+				Liefert ein Abild des &lt;sitemap&gt; Tags aus der Konfiguration, wird $computeActions = false übergeben, werden die Action Objekte ausgespart
+				<pre style="padding:5px; background-color:lightgrey;">
+					// Gibt den Wert des <constant name="blog"> Tags aus dem ersten Action Tag im ersten Page Tag aus.
+					$arrSitemap = Application->getSitemapArray();
+					die($arrSitemap['page'][0]['action'][0]['blog']);
+				</pre>
+			</p>
+			<h3>Application->getSitemapAssoc($computeActions = true)</h3>
+			<p>
+				Liefert ein Abild des &lt;sitemap&gt; Tags aus der Konfiguration, als Assoziatives Array wird $computeActions = false übergeben, werden die Action Objekte ausgespart
+				<pre style="padding:5px; background-color:lightgrey;">
+					// Gibt den Wert des <constant name="errorDE"> Tags aus dem Action Tag mit dem Namen 'opener' im Page Tag mit dem namen 'index' aus.
+					$arrSitemap = Application->getSitemapAssoc();
+					die($arrSitemap['page']['index']['action']['opener']['errorDE']);
+				</pre>
+			</p>
+		</p>
+	</body>
+</html>
