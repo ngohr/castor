@@ -86,6 +86,7 @@ abstract class Castor {
 	// document / arr nodes
 	public $elements = array();
 
+	abstract function createPage($pagename, $pagenode);
 	abstract function createActions($pagename, $templateObj);
 
 	public function __construct($file = false, $pagename = false, $actionname = false, $notCreate = false) {
@@ -157,15 +158,18 @@ abstract class Castor {
 				$item = $arrNodes->item($i);
 				if($item) {
 					$arrname = $item->getAttribute('name');
+					$evaluate = $item->getAttribute('eval');
 					$variables = $xpath->query("var", $item);
 					for($f = 0; $f < $variables->length; $f++) {
 						$var = $variables->item($f);
 						if($var) {
 							$name = $var->getAttribute('name');
 							if($name && $name != '') {
-								$value = $var->nodeValue;
-
-								$arr[$name] = $value;
+								if($evaluate && $evaluate == 'yes') {
+									$arr[$name] = elements::evalVar($var->nodeValue);
+								} else {
+									$arr[$name] = $var->nodeValue;
+								}
 							}
 
 							unset($name);
@@ -226,14 +230,22 @@ abstract class Castor {
 
 						$item = $arrNodes->item($e);
 						$arrname = $item->getAttribute('name');
+						$evaluate = $item->getAttribute('eval');
 						$varNodes = $xpath->query("var", $item);
 						if($varNodes && $varNodes->length > 0) {
 							for($f = 0; $f < $varNodes->length; $f++) {
 								$var = $varNodes->item($f);
-								$name = $var->getAttribute('name');
-								$value = $var->nodeValue;
-
-								$arr[$name] = $value;
+								if($var) {
+									$name = $var->getAttribute('name');
+									if($name && $name != '') {
+										if($evaluate && $evaluate == 'yes') {
+											$value = elements::evalVar($var->nodeValue);
+										} else {
+											$value = $var->nodeValue;
+										}
+									}
+									$arr[$name] = $value;
+								}
 							}
 						}
 						$this->surface[$surfaceName]['elements'][$arrname] = $arr;
@@ -303,17 +315,25 @@ abstract class Castor {
 
 						$item = $arrNodes->item($e);
 						$arrname = $item->getAttribute('name');
+						$evaluate = $item->getAttribute('eval');
 						$varNodes = $xpath->query("var", $item);
 						if($varNodes && $varNodes->length > 0) {
 							for($f = 0; $f < $varNodes->length; $f++) {
 								$var = $varNodes->item($f);
-								$name = $var->getAttribute('name');
-								$value = $var->nodeValue;
-
-								$arr[$name] = $value;
+								if($var) {
+									$name = $var->getAttribute('name');
+									if($name && $name != '') {
+										if($evaluate && $evaluate == 'yes') {
+											$value = elements::evalVar($var->nodeValue);
+										} else {
+											$value = $var->nodeValue;
+										}
+									}
+									$arr[$name] = $value;
+								}
 							}
+							$this->operator[$operatorName]['elements'][$arrname] = $arr;
 						}
-						$this->operator[$operatorName]['elements'][$arrname] = $arr;
 
 						unset($arr);
 					}
@@ -380,17 +400,25 @@ abstract class Castor {
 
 						$item = $arrNodes->item($e);
 						$arrname = $item->getAttribute('name');
+						$evaluate = $item->getAttribute('eval');
 						$varNodes = $xpath->query("var", $item);
 						if($varNodes && $varNodes->length > 0) {
 							for($f = 0; $f < $varNodes->length; $f++) {
 								$var = $varNodes->item($f);
-								$name = $var->getAttribute('name');
-								$value = $var->nodeValue;
-
-								$arr[$name] = $value;
+								if($var) {
+									$name = $var->getAttribute('name');
+									if($name && $name != '') {
+										if($evaluate && $evaluate == 'yes') {
+											$value = elements::evalVar($var->nodeValue);
+										} else {
+											$value = $var->nodeValue;
+										}
+									}
+									$arr[$name] = $value;
+								}
 							}
+							$this->adapter[$adapterName]['elements'][$arrname] = $arr;
 						}
-						$this->adapter[$adapterName]['elements'][$arrname] = $arr;
 
 						unset($arr);
 					}
