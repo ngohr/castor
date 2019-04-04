@@ -124,11 +124,16 @@ abstract class Document extends Castor {
 
 			$item = $arrNodes->item($e);
 			$arrname = $item->getAttribute('name');
+			$evaluate = $item->getAttribute('eval');
 			$variables = $item->getElementsByTagName('var');
 			for($f = 0; $f < $variables->length; $f++) {
 				$var = $variables->item($f);
 				$name = $var->getAttribute('name');
-				$value = $var->nodeValue;
+				if($evaluate && $evaluate == 'yes') {
+					$value = elements::evalVar($var->nodeValue);
+				} else {
+					$value = $var->nodeValue;
+				}
 
 				$arr[$name] = $value;
 			}
@@ -380,12 +385,17 @@ abstract class Document extends Castor {
 					$arr = array();
 
 					$item = $arrNodes->item($e);
+					$evaluate = $item->getAttribute('eval');
 					$arrname = $item->getAttribute('name');
 					$variables = $xpath->query("var", $item);
 					for($f = 0; $f < $variables->length; $f++) {
 						$var = $variables->item($f);
 						$name = $var->getAttribute('name');
-						$value = $var->nodeValue;
+						if($evaluate && $evaluate == 'yes') {
+							$value = elements::evalVar($var->nodeValue);
+						} else {
+							$value = $var->nodeValue;
+						}
 
 						$arr[$name] = $value;
 					}
