@@ -23,7 +23,6 @@ define("RESET_CONFIG", true);
 
 abstract class sessionManagement extends Operator {
 	public $rights;
-	private $token = false;
 	private $hashAlgorythm = 'md5';
 	private $constants;
 	private $lastSessionId;
@@ -77,12 +76,12 @@ abstract class sessionManagement extends Operator {
 			ini_set('session.use_trans_sid', 'Off');
 			ini_set('session.use_strict_mode', 'On');
 			ini_set('session.cookie_httponly', 'On');
-		}
 
-		if(isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)) {
-			ini_set('session.cookie_secure', 'On');
-		} else {
-			ini_set('session.cookie_secure', 'Off');
+			if(isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1)) {
+				ini_set('session.cookie_secure', 'On');
+			} else {
+				ini_set('session.cookie_secure', 'Off');
+			}
 		}
 
 		// Find a strong hash algorythm available

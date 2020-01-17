@@ -59,17 +59,7 @@ class elements {
 	
 		return true;
 	}
-
-	public static function evalVar($str) {
-		if(preg_match('/^\$/', $str)) {
-			$val = false;
-			eval('if(isset('.$str.')) $val = '.$str.'; else $val = \''.str_replace('\'', "\'", $str).'\';');
-		} else {
-			$val = $str;
-		}
-		return $val;
-	}
-
+	
 	public static function createElementRepresentation($param, &$domDocumentObj, &$domElement) {
 		if(!is_array($param)) {
 			self::setError('Failed to process, invalid parameter for method createElementRepresentation, array expected!');

@@ -560,11 +560,11 @@ Dieser kann bspw. genutzt werden um Seiten im Hauptmenü zu verstecken oder zu H
 				Zwar liegt der Schwerpunkt von Castor auf der Konfiguration des Objekt Baumes, aber auch händisch lassen sich Programmodelle mit diesen Klassen aufbauen.<br>
 				Im beiglegten bsp. findet man einen kurzen Code in den Kommentaren als Alternative zu minimaler Konfiguration:<br>
 				<pre style="padding:5px; background-color:lightgrey;">
-$page = new Page('home', 'index');
+$page = new Page('home', 'welcome');
 $page->addFile('controller/indexController.php');
 $page->setElement('myelement', array('element' => 'Hello World'));
-$page->addAction('index', 'controller/indexController.php', 'indexAction');
-$page->loadPage('home', 'index');
+$page->addAction('welcome', 'indexController', 'welcome');
+$page->loadPage('home', 'welcome');
 				</pre>
 				Beim Parsen der Konfiguration beschränkt sich der Kern ähnlich wie hier auf den minimalsten Objekt Baum der nötig ist um loadPage ausführen zu können.<br>
 				Im günstigsten Fall, beschränkt sich der Kern auf den bsp. Code um die essentiellen Daten für den Router bereitzustellen wenn eine Action geladen wird.<br>
@@ -572,7 +572,7 @@ $page->loadPage('home', 'index');
 				Die minimale Code Basis um eine Methode im Controller aufzurufen sieht intern also aus wie etwa hier:
 				<pre style="padding:5px; background-color:lightgrey;">
 require_once('controller/simpleController.php');
-$action = new Action('impressum', 'indexController.php', 'impressum');
+$action = new Action('impressum', 'indexController', 'impressum');
 $action->run();
 				</pre>
 				Das Attribute returnType, rendering und der "stylesheet", werden vom Doucment an Page bis Action zwar vererbt werden aber erst durch die Document Klasse mit loadPage wieder ausgewertet.<br>
