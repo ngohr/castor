@@ -1,6 +1,6 @@
 <?php
 
-define('FILE_TIMEOUT', 0);
+define('FILE_TIMEOUT', 600);
 
 class HttpCache extends Application {
 	public function compressAction() {
@@ -10,7 +10,7 @@ class HttpCache extends Application {
 		$objPage = $this->getObjPage($this->getPagename());
 		$stylesheet = $objPage->getStylesheet($this->getActionname());
 		$files = explode(";", $stylesheet);
-		foreach($files as $index => $file) {
+		foreach($files as $file) {
 			if(preg_match("/^\/.*/", $file)) {
 				if(filemtime($_SERVER['DOCUMENT_ROOT'].$file) > $lastModified)
 					$lastModified = filemtime($_SERVER['DOCUMENT_ROOT'].$file);
@@ -329,7 +329,7 @@ function CompressPhtml(&$objPage, $action) {
 	}
 
 	ob_end_flush();
-	// flush();
+	flush();
 }
 
 hooks::addHook('returnType', 'CompressCss', 'CompressCss');

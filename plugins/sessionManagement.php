@@ -23,7 +23,6 @@ define("RESET_CONFIG", true);
 
 abstract class sessionManagement extends Operator {
 	public $rights;
-	private $token = false;
 	private $hashAlgorythm = 'md5';
 	private $constants;
 	private $lastSessionId;
