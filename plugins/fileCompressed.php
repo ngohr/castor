@@ -1,6 +1,6 @@
 <?php
 
-define('FILE_TIMEOUT', 0);
+define('FILE_TIMEOUT', 600);
 
 class HttpCache extends Application {
 	public function compressAction() {
