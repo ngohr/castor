@@ -297,7 +297,6 @@ function CompressPhtml(&$objPage, $action) {
 		}
 	}
 
-	ob_implicit_flush(false);
 	$stylesheet = $objPage->getStylesheet($action);
 	$content = get_include_contents($stylesheet);
 	if($content) {
@@ -327,9 +326,6 @@ function CompressPhtml(&$objPage, $action) {
 		*/
 		echo $content;
 	}
-
-	ob_end_flush();
-	flush();
 }
 
 hooks::addHook('returnType', 'CompressCss', 'CompressCss');
