@@ -161,7 +161,6 @@ abstract class sessionManagement extends Operator {
 			} else {
 				// Regernate id after $this->sessionTimeoutSec seconds
 				if($_SESSION['SESSIONID_MAXLIFETIME'] < time()) {
-					trigger_error("session_regenerate_id");
 					session_regenerate_id(true);
 					if(method_exists($this, "onRegenerate"))
 						call_user_func(array($this, "onRegenerate") , session_id());
